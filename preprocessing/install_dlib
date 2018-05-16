@@ -1,0 +1,130 @@
+https://www.pyimagesearch.com/2017/03/27/how-to-install-dlib/
+
+https://www.pyimagesearch.com/2017/04/10/detect-eyes-nose-lips-jaw-dlib-opencv-python/
+
+# Install boost c++ library
+$sudo apt-get install libboost-all-dev
+
+# Install boost python, aunque creo que ya se instalo con el comando pasado
+$sudo apt-get install libboost-python-dev
+
+# Install cmake
+$sudo apt-get install software-properties-common
+$sudo add-apt-repository ppa:george-edison55/cmake-3.x
+$sudo apt-get update
+
+$sudo apt-get install cmake
+$sudo apt-get upgrade
+
+sudo apt-get install libgtk-3-dev
+
+# Instal opencv https://www.pyimagesearch.com/2016/10/24/ubuntu-16-04-how-to-install-opencv/
+
+$sudo apt-get install libopencv-dev python-opencv
+
+or
+
+$ sudo apt-get install build-essential cmake pkg-config
+# for images
+$ sudo apt-get install libjpeg8-dev libtiff5-dev libjasper-dev libpng12-dev
+# for videos
+$ sudo apt-get install libavcodec-dev libavformat-dev libswscale-dev libv4l-dev
+$ sudo apt-get install libxvidcore-dev libx264-dev
+
+$ sudo apt-get install libgtk-3-dev
+
+# optimize opencv
+$ sudo apt-get install libatlas-base-dev gfortran
+
+# bajar la ultima version de opencv
+$ cd ~
+$ wget -O opencv.zip https://github.com/Itseez/opencv/archive/3.4.1.zip
+$ unzip opencv.zip
+
+$ wget -O opencv_contrib.zip https://github.com/Itseez/opencv_contrib/archive/3.4.1.zip
+$ unzip opencv_contrib.zip
+
+# instalar ambiente virtual
+$ sudo pip install virtualenv virtualenvwrapper
+
+# 
+$ echo -e "\n# virtualenv and virtualenvwrapper" >> ~/.bashrc
+$ echo "export WORKON_HOME=$HOME/.virtualenvs" >> ~/.bashrc
+$ echo "source /usr/local/bin/virtualenvwrapper.sh" >> ~/.bashrc
+
+$ source ~/.bashrc
+
+$ mkvirtualenv cv -p python3
+
+# in the virtual enviroment 
+
+$ cd ~/opencv-3.4.1/
+$ mkdir build
+$ cd build
+
+# !!!!Importan if doesnt work change     
+#	-D PYTHON_EXECUTABLE=~/.virtualenvs/cv/bin/python3 \  por -D PYTHON_EXECUTABLE=~/.virtualenvs/cv/bin/python \
+
+$ cmake -D CMAKE_BUILD_TYPE=RELEASE \
+    -D CMAKE_INSTALL_PREFIX=/usr/local \
+    -D INSTALL_PYTHON_EXAMPLES=ON \
+    -D INSTALL_C_EXAMPLES=OFF \
+    -D OPENCV_EXTRA_MODULES_PATH=~/opencv_contrib-3.4.1/modules \
+    -D PYTHON_EXECUTABLE=~/.virtualenvs/cv/bin/python3 \
+    -D BUILD_EXAMPLES=ON ..
+# compile opencv
+
+$ make -j4
+
+# si falla
+$ make clean
+$ make
+
+# install opencv
+$ sudo make install
+$ sudo ldconfig
+$ make -j4
+
+# install OpenCV
+$ sudo make install
+$ sudo ldconfig
+
+# Haciendo ajustes
+# instalar ambiente virtual
+$ sudo pip3 install virtualenv virtualenvwrapper
+
+# virtualenv and virtualenvwrapper
+$ export WORKON_HOME=$HOME/.virtualenv
+$ source /usr/local/bin/virtualenvwrapper.sh
+
+# volvi a crear cv
+$ mkvirtualenv cv -p python3
+
+# install numpy to virtual environment
+$ pip install numpy
+
+
+$ cmake -D CMAKE_BUILD_TYPE=RELEASE \
+    -D CMAKE_INSTALL_PREFIX=/usr/local \
+    -D INSTALL_PYTHON_EXAMPLES=ON \
+    -D INSTALL_C_EXAMPLES=OFF \
+    -D OPENCV_EXTRA_MODULES_PATH=~/opencv_contrib-3.4.1/modules \
+    -D PYTHON_EXECUTABLE=~/.virtualenvs/cv/bin/python3 \
+    -D BUILD_EXAMPLES=ON ..
+$ make
+
+# Install opencv (inside envirooment)
+$ pip install opencv-python
+$ pip install opencv-contrib-python
+
+# Install dlib prerequisites (ooutisde enviroment)
+$ sudo apt-get install build-essential cmake
+$ sudo apt-get install libgtk-3-dev
+$ sudo apt-get install libboost-all-dev
+
+# Install dlib (inside envirooment)
+$ pip install numpy
+$ pip install scipy
+$ pip install scikit-image
+
+$ pip install dlib
