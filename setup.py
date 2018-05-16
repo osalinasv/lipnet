@@ -6,4 +6,5 @@ setup(
     packages=['lipnext'],
     license='Apache License, Version 2.0',
     long_description=open('README.md').read(),
+    requires=['keras']
 )
