@@ -1,5 +1,5 @@
 # Word Error Rate Calculation, by Martin Thoma
-# Extracted from https://martin-thoma.com/word-error-rate-calculation/
+# Source: https://martin-thoma.com/word-error-rate-calculation/
 
 
 def wer(r, h):
