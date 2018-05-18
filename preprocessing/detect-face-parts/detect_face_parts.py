@@ -2,7 +2,7 @@
 # python detect_face_parts.py --shape-predictor shape_predictor_68_face_landmarks.dat --image images/example_01.jpg 
 
 
-def extractMouth(image, outputfolder):
+def extract_mouth(image, output_path_image):
 	# import the necessary packages
 	from imutils import face_utils
 	import numpy as np
@@ -56,8 +56,11 @@ def extractMouth(image, outputfolder):
 		#roi = imutils.resize(roi, width=100)
 
 		# save mouth
-		cv2.imwrite("roi/0.jpg", roi)
+		print(output_path_image)
+		#cv2.imshow("ROI", roi)
+		#cv2.waitKey(0)
+		cv2.imwrite(output_path_image, roi)
 
-extractMouth("images/0.jpg","roi")
+##extractMouth("images/0.jpg","roi")
 
 		
