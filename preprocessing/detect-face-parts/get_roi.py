@@ -28,9 +28,13 @@ make_dir(path_frames)
 make_dir(path_rois)
 
 for subdir, dirs, files in os.walk(path_videos):    
-    start = subdir.find('/') + 1        
+    
+    subdirs = subdir.split('/')        
     # s1, s2, .. ,sn
-    sub = subdir[start:]
+    sub = subdirs[2] if len(subdirs) >= 3 else subdir
+
+    print(subdir)
+    print(sub)
 
     for file in files:               
         # get the name of the image without the extension
