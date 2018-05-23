@@ -88,8 +88,7 @@ class LipNext(object):
 
         loss_out = CTC('ctc', [y_pred, input_labels, input_length, label_length])
 
-        self.model = Model(inputs=[input_layer, input_labels, input_length, label_length],
-                           outputs=loss_out)
+        self.model = Model(inputs=[input_layer, input_labels, input_length, label_length], outputs=loss_out)
 
     def get_input_shape(self):
         if k.image_data_format() == 'channels_first':
@@ -101,7 +100,7 @@ class LipNext(object):
         print(self.model.summary())
 
     def plot_model(self, file_name: str = 'model.png'):
-        plot_model(lipnext.model, to_file=file_name, show_shapes=True)
+        plot_model(self.model, to_file=file_name, show_shapes=True)
 
     @staticmethod
     def create_input(name: str, shape, dtype: str = INPUT_TYPE) -> Input:

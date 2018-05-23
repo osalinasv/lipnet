@@ -155,4 +155,7 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
 \.idea/
+preprocessing/alignment
+preprocessing/detect-face-parts/pruebas
