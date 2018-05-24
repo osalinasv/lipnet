@@ -43,12 +43,13 @@ class LipNext(object):
     ADAM_S_MOMENTUM = 0.999
     ADAM_STABILITY = 1e-08
 
-    def __init__(self, image_width=IMAGE_WIDTH, image_height=IMAGE_HEIGHT, image_channels=IMAGE_CHANNELS,
-                 frame_rate=FRAME_RATE, max_string=MAX_STRING, output_size=OUTPUT_SIZE):
+    def __init__(self, *, frame_count: int = FRAME_RATE, image_channels: int = IMAGE_CHANNELS,
+                 image_height: int = IMAGE_HEIGHT, image_width: int = IMAGE_WIDTH, max_string: int = MAX_STRING,
+                 output_size: int = OUTPUT_SIZE):
         self.image_width = image_width
         self.image_height = image_height
         self.image_channels = image_channels
-        self.frame_rate = frame_rate
+        self.frame_count = frame_count
         self.max_string = max_string
         self.output_size = output_size
 
@@ -99,9 +100,9 @@ class LipNext(object):
 
     def get_input_shape(self):
         if k.image_data_format() == 'channels_first':
-            return self.image_channels, self.frame_rate, self.image_width, self.image_height
+            return self.image_channels, self.frame_count, self.image_width, self.image_height
         else:
-            return self.frame_rate, self.image_width, self.image_height, self.image_channels
+            return self.frame_count, self.image_width, self.image_height, self.image_channels
 
     def compile(self):
         adam = Adam(lr=LipNext.ADAM_LEARN_RATE, beta_1=LipNext.ADAM_F_MOMENTUM, beta_2=LipNext.ADAM_S_MOMENTUM,
