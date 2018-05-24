@@ -50,9 +50,3 @@ def wer(r, h):
                 d[i][j] = min(substitution, insertion, deletion)
 
     return d[len(r)][len(h)]
-
-
-if __name__ == "__main__":
-    import doctest
-
-    doctest.testmod()

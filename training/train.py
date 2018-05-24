@@ -14,11 +14,19 @@ OUTPUT_DIR = os.path.join(ROOT_PATH, 'data', 'results')
 LOG_DIR = os.path.join(ROOT_PATH, 'data', 'logs')
 
 
-def train(*, run_name: str, start_epoch: int, stop_epoch: int):
+def train(*, run_name: str, start_epoch: int, stop_epoch: int, frame_count: int, image_channels: int, image_height: int,
+          image_width: int, max_string: int):
     print("Started: Training...")
     print("Running: {}".format(run_name))
 
-    lipnext = LipNext()
+    lipnext = LipNext(
+        frame_count=frame_count,
+        image_channels=image_channels,
+        image_height=image_height,
+        image_width=image_width,
+        max_string=max_string
+    )
+
     lipnext.summary()
     lipnext.compile()
 
@@ -42,5 +50,14 @@ def train(*, run_name: str, start_epoch: int, stop_epoch: int):
 
 
 if __name__ == '__main__':
-    run_name = datetime.datetime.now().strftime('%Y:%m:%d:%H:%M:%S')
-    train(run_name=run_name, start_epoch=0, stop_epoch=1)
+    name = datetime.datetime.now().strftime('%Y:%m:%d:%H:%M:%S')
+    train(
+        run_name=name,
+        start_epoch=0,
+        stop_epoch=5000,
+        frame_count=75,
+        image_channels=3,
+        image_height=50,
+        image_width=100,
+        max_string=32,
+    )
