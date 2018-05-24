@@ -6,11 +6,18 @@ setup(
     license='Apache License, Version 2.0',
     long_description=open('README.md').read(),
     url="http://www.github.com/omarsalinas16/lipnext",
-    packages=['lipnext'],
+    packages=['lipnext', 'preprocessing'],
+    zip_safe=False,
     install_requires=[
+        'dlib',
+        'h5py',
+        'Keras',
+        'matplotlib',
         'numpy',
-        'keras',
-        'tensorflow',
+        'Pillow',
+        'scipy',
+        'scikit-image',
+        'sk-video',
         'tensorflow-gpu'
     ]
 )
