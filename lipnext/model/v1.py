@@ -111,17 +111,27 @@ class LipNext(object):
     def load_weights(self, path: str):
         self.model.load_weights(path)
 
+    def train(self, *, generator, validator=None, start_epoch: int = 0, stop_epoch: int = 1, training_steps: int = None,
+              validation_steps: int = None, callbacks: list = None):
+        self.model.fit_generator(
+            generator=generator,
+            validation_data=validator,
+            steps_per_epoch=training_steps,
+            validation_steps=validation_steps,
+            callbacks=callbacks,
+            initial_epoch=start_epoch,
+            epochs=stop_epoch,
+            verbose=1,
+            max_q_size=5,
+            workers=2,
+            pickle_safe=True
+        )
+
     def summary(self):
-        if self.model is None:
-            print("The model has not been initialized yet")
-        else:
-            print(self.model.summary())
+        self.model.summary()
 
     def plot_model(self, file_name: str = 'model.png'):
-        if self.model is None:
-            print("The model has not been initialized yet")
-        else:
-            plot_model(self.model, to_file=file_name, show_shapes=True)
+        plot_model(self.model, to_file=file_name, show_shapes=True)
 
     @staticmethod
     def create_input(name: str, shape, dtype: str = INPUT_TYPE) -> Input:
