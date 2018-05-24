@@ -1,4 +1,4 @@
-from detect_face_parts import extract_mouth
+from preprocessing.extractor.detect_face_parts import extract_mouth
 
 def video_to_frames_roi(input_loc, output_loc_frame, output_loc_roi):
     """Function to extract frames from input video file

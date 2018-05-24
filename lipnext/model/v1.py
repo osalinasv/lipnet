@@ -1,14 +1,16 @@
-from keras.layers.convolutional import Conv3D, ZeroPadding3D
-from keras.layers.pooling import MaxPooling3D
-from keras.layers.core import Dense, Activation, Flatten, SpatialDropout3D
-from keras.layers.wrappers import Bidirectional, TimeDistributed
-from keras.layers.recurrent import GRU
-from keras.layers.normalization import BatchNormalization
-from keras.layers import Input
-from keras.models import Model
 from keras import backend as k
-from lipnext.model.layers import CTC
+from keras.layers import Input
+from keras.layers.convolutional import Conv3D, ZeroPadding3D
+from keras.layers.core import Activation, Dense, Flatten, SpatialDropout3D
+from keras.layers.normalization import BatchNormalization
+from keras.layers.pooling import MaxPooling3D
+from keras.layers.recurrent import GRU
+from keras.layers.wrappers import Bidirectional, TimeDistributed
+from keras.models import Model
+from keras.optimizers import Adam
 from keras.utils import plot_model
+
+from lipnext.model.layers import CTC
 
 
 class LipNext(object):
@@ -35,6 +37,11 @@ class LipNext(object):
 
     GRU_KERNEL_INIT = 'Orthogonal'
     GRU_MERGE_MODE = 'concat'
+
+    ADAM_LEARN_RATE = 0.0001
+    ADAM_F_MOMENTUM = 0.9
+    ADAM_S_MOMENTUM = 0.999
+    ADAM_STABILITY = 1e-08
 
     def __init__(self, image_width=IMAGE_WIDTH, image_height=IMAGE_HEIGHT, image_channels=IMAGE_CHANNELS,
                  frame_rate=FRAME_RATE, max_string=MAX_STRING, output_size=OUTPUT_SIZE):
@@ -96,11 +103,25 @@ class LipNext(object):
         else:
             return self.frame_rate, self.image_width, self.image_height, self.image_channels
 
+    def compile(self):
+        adam = Adam(lr=LipNext.ADAM_LEARN_RATE, beta_1=LipNext.ADAM_F_MOMENTUM, beta_2=LipNext.ADAM_S_MOMENTUM,
+                    epsilon=LipNext.ADAM_STABILITY)
+        self.model.compile(loss={'ctc': lambda y_true, y_pred: y_pred}, optimizer=adam)
+
+    def load_weights(self, path: str):
+        self.model.load_weights(path)
+
     def summary(self):
-        print(self.model.summary())
+        if self.model is None:
+            print("The model has not been initialized yet")
+        else:
+            print(self.model.summary())
 
     def plot_model(self, file_name: str = 'model.png'):
-        plot_model(self.model, to_file=file_name, show_shapes=True)
+        if self.model is None:
+            print("The model has not been initialized yet")
+        else:
+            plot_model(self.model, to_file=file_name, show_shapes=True)
 
     @staticmethod
     def create_input(name: str, shape, dtype: str = INPUT_TYPE) -> Input:
@@ -140,5 +161,7 @@ class LipNext(object):
 if __name__ == '__main__':
     lipnext = LipNext()
 
-    lipnext.plot_model()
+    # lipnext.plot_model()
+
     lipnext.summary()
+    lipnext.compile()
