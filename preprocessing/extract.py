@@ -2,10 +2,7 @@ import fnmatch
 import os
 import sys
 
-from preprocessing.extractor.roi import video_to_frames_roi
-
-FRAMES_DIR_NAME = 'frames'
-CUTOUTS_DIR_NAME = 'cutouts'
+from preprocessing.extractor.extract_roi_frames import video_to_frames
 
 
 def make_dir(path: str):
@@ -46,22 +43,16 @@ def extract(videos_path: str, pattern: str, output_path: str, predictor_path: st
     output_path = os.path.realpath(output_path)
     predictor_path = os.path.realpath(predictor_path)
 
-    frames_path = os.path.join(output_path, FRAMES_DIR_NAME)
-    cutouts_path = os.path.join(output_path, CUTOUTS_DIR_NAME)
-
     for file_path in find_files(videos_path, pattern):
         group_dir = os.path.basename(os.path.dirname(file_path))
         video_dir = os.path.splitext(os.path.basename(file_path))[0]
 
         video_full_dir = os.path.join(group_dir, video_dir)
 
-        vid_frames_target_dir = os.path.join(frames_path, video_full_dir)
-        vid_cutouts_target_dir = os.path.join(cutouts_path, video_full_dir)
-
-        make_dir(vid_frames_target_dir)
+        vid_cutouts_target_dir = os.path.join(output_path, video_full_dir)
         make_dir(vid_cutouts_target_dir)
 
-        video_to_frames_roi(file_path, vid_frames_target_dir, vid_cutouts_target_dir, predictor_path)
+        video_to_frames(file_path, vid_cutouts_target_dir, predictor_path)
 
 
 if __name__ == '__main__':
