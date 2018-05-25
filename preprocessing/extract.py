@@ -1,9 +1,11 @@
+import fnmatch
 import os
 import sys
-import fnmatch
+
 from preprocessing.extractor.roi import video_to_frames_roi
 
-from preprocessing.extractor.video_to_frames import video_to_frames
+FRAMES_DIR_NAME = 'frames'
+CUTOUTS_DIR_NAME = 'cutouts'
 
 
 def make_dir(path: str):
@@ -40,52 +42,26 @@ def extract(videos_path: str, pattern: str, output_path: str, predictor_path: st
     :return:
     """
 
-    # print()
-    # print('videos_path: {}'.format(videos_path))
-    # print('pattern: {}'.format(pattern))
-    # print('output_path: {}'.format(output_path))
-    # print('predictor_path: {}'.format(predictor_path))
-    # print()
+    videos_path = os.path.realpath(videos_path)
+    output_path = os.path.realpath(output_path)
+    predictor_path = os.path.realpath(predictor_path)
 
-    abs_videos_path = os.path.realpath(videos_path)
-    abs_output_path = os.path.realpath(output_path)
-    abs_predictor_path = os.path.realpath(predictor_path)
+    frames_path = os.path.join(output_path, FRAMES_DIR_NAME)
+    cutouts_path = os.path.join(output_path, CUTOUTS_DIR_NAME)
 
-    # print('abs_videos_path: {}'.format(abs_videos_path))
-    # print('abs_output_path: {}'.format(abs_output_path))
-    # print('abs_predictor_path: {}'.format(abs_predictor_path))
-    # print()
-
-    frames_path = os.path.join(abs_output_path, 'frames')
-    cutouts_path = os.path.join(abs_output_path, 'cutouts')
-
-    # print('frames_path: {}'.format(frames_path))
-    # print('cutouts_path: {}'.format(cutouts_path))
-    # print()
-
-    for file_path in find_files(abs_videos_path, pattern):
-        # print('file_path: {}'.format(file_path))
-
+    for file_path in find_files(videos_path, pattern):
         group_dir = os.path.basename(os.path.dirname(file_path))
-        # print('group_dir: {}'.format(group_dir))
-
         video_dir = os.path.splitext(os.path.basename(file_path))[0]
-        # print('video_dir: {}'.format(video_dir))
 
         video_full_dir = os.path.join(group_dir, video_dir)
-        # print('video_full_dir: {}'.format(video_full_dir))
 
         vid_frames_target_dir = os.path.join(frames_path, video_full_dir)
-        # print('vid_frames_target_dir: {}'.format(vid_frames_target_dir))
-
         vid_cutouts_target_dir = os.path.join(cutouts_path, video_full_dir)
-        # print('vid_cutouts_target_dir: {}'.format(vid_cutouts_target_dir))
-        # print()
 
         make_dir(vid_frames_target_dir)
         make_dir(vid_cutouts_target_dir)
-        video_to_frames_roi(file_path, vid_frames_target_dir, vid_cutouts_target_dir, abs_predictor_path)
 
+        video_to_frames_roi(file_path, vid_frames_target_dir, vid_cutouts_target_dir, predictor_path)
 
 
 if __name__ == '__main__':
@@ -112,7 +88,7 @@ if __name__ == '__main__':
 
     i_path = None
     o_path = None
-    pat = '*.*'
+    pat = '*.mpg'
     p_path = os.path.join(__file__, '..', '..', 'data', 'predictors', 'shape_predictor_68_face_landmarks.dat')
 
     if argv_len == 3:
