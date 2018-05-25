@@ -9,16 +9,17 @@ setup(
     packages=['lipnext', 'preprocessing'],
     zip_safe=False,
     install_requires=[
-        'dlib',
-        'h5py',
-        'imutils',
-        'Keras',
-        'matplotlib',
-        'numpy',
-        'Pillow',
-        'scipy',
-        'scikit-image',
-        'sk-video',
-        'tensorflow-gpu'
+        'dlib==19.8.1',
+        'h5py==2.7.1',
+        'imutils==0.4.6',
+        'Keras==2.1.6',
+        'matplotlib==2.2.2',
+        'numpy==1.14.3',
+        'opencv-python==3.4.1.15',
+        'Pillow==5.1.0',
+        'scikit-image==0.13.1',
+        'scikit-video==1.1.10',
+        'scipy==1.1.0',
+        'tensorflow-gpu==1.8.0'
     ]
 )
