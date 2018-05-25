@@ -157,5 +157,12 @@ venv.bak/
 .mypy_cache/
 
 \.idea/
+
+# LipNext ignores
+
+data/dataset
+data/results
+data/target
+
 preprocessing/alignment
 preprocessing/detect-face-parts/pruebas

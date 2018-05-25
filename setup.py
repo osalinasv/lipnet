@@ -11,6 +11,7 @@ setup(
     install_requires=[
         'dlib',
         'h5py',
+        'imutils',
         'Keras',
         'matplotlib',
         'numpy',
