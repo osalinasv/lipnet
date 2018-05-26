@@ -1,10 +1,11 @@
 import os
-
 import cv2
 import dlib
 import numpy as np
 import skvideo.io
+
 from imutils import face_utils
+from progress.bar import ShadyBar
 from scipy.misc import imresize
 from skimage import io
 
@@ -17,11 +18,18 @@ def video_to_frames(file_path: str, output_dir: str, predictor_path: str):
     video_object = skvideo.io.vread(file_path)
     frames = np.array([frame for frame in video_object])
 
+    print('\nProcessing: {}'.format(file_path))
+    suffix = '%(percent)d%% [%(elapsed_td)s]'
+    bar = ShadyBar(os.path.basename(file_path), max=len(frames), suffix=suffix)
+
     for i, frame in enumerate(frames):
         filename = '{:05}.jpg'.format(i + 1)
         output_cutout_file_path = os.path.join(output_dir, filename)
 
         io.imsave(output_cutout_file_path, extract_mouth(frame, predictor_path))
+        bar.next()
+
+    bar.finish()
 
 
 def extract_mouth(frame, predictor_path: str):

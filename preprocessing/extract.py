@@ -43,6 +43,9 @@ def extract(videos_path: str, pattern: str, output_path: str, predictor_path: st
     output_path = os.path.realpath(output_path)
     predictor_path = os.path.realpath(predictor_path)
 
+    print('\nEXTRACT\n')
+    print('Searching for files in: {}\nMatch for: {}'.format(videos_path, pattern))
+
     for file_path in find_files(videos_path, pattern):
         group_dir = os.path.basename(os.path.dirname(file_path))
         video_dir = os.path.splitext(os.path.basename(file_path))[0]
@@ -53,6 +56,8 @@ def extract(videos_path: str, pattern: str, output_path: str, predictor_path: st
         make_dir(vid_cutouts_target_dir)
 
         video_to_frames(file_path, vid_cutouts_target_dir, predictor_path)
+
+    print('Finished extraction successfully\n')
 
 
 if __name__ == '__main__':
