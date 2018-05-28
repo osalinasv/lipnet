@@ -163,6 +163,7 @@ venv.bak/
 data/dataset
 data/results
 data/target
+data/standardize
 
 preprocessing/alignment
 preprocessing/detect-face-parts/pruebas

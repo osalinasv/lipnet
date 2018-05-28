@@ -2,17 +2,16 @@ import fnmatch
 import os
 import sys
 
-from preprocessing.extractor.extract_roi_frames import video_to_frames
-
+from extractor.extract_roi_frames import video_to_frames
 
 def make_dir(path: str):
     if not os.path.exists(path) or not os.path.isdir(path):
         os.makedirs(path)
 
 
-def find_files(path: str, pattern: str):
-    for root, _, files in os.walk(path):
-        for basename in files:
+def find_files(path: str, pattern: str):    
+    for root, _, files in os.walk(path):        
+        for basename in files:                        
             if fnmatch.fnmatch(basename, pattern):
                 filename = os.path.realpath(os.path.join(root, basename))
                 yield filename
@@ -46,7 +45,7 @@ def extract(videos_path: str, pattern: str, output_path: str, predictor_path: st
     print('\nEXTRACT\n')
     print('Searching for files in: {}\nMatch for: {}'.format(videos_path, pattern))
 
-    for file_path in find_files(videos_path, pattern):
+    for file_path in find_files(videos_path, pattern):        
         group_dir = os.path.basename(os.path.dirname(file_path))
         video_dir = os.path.splitext(os.path.basename(file_path))[0]
 
