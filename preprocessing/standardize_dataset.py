@@ -73,9 +73,10 @@ if __name__ == '__main__':
                         dtype=np.float32)
 
     i = 0    
-    for _file in train_files:        
+    for _file in train_files:
+        print(_file)
         img = load_img(_file)  # this is a PIL image
-        img.thumbnail((IMAGE_WIDTH, IMAGE_HEIGHT))
+        # img.thumbnail((IMAGE_WIDTH, IMAGE_HEIGHT))
         # Convert to Numpy Array
         x = img_to_array(img)
         dataset[i] = x

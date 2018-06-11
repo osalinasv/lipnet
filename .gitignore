@@ -164,6 +164,11 @@ data/dataset
 data/results
 data/target
 data/standardize
+data/align
 
 preprocessing/alignment
 preprocessing/detect-face-parts/pruebas
+
+# Virtual environment ignore
+
+preprocessing/prepvenv

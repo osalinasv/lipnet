@@ -1,6 +1,8 @@
 import fnmatch
 import os
 import sys
+import shutil
+import argparse
 
 from extractor.extract_roi_frames import video_to_frames
 
@@ -9,15 +11,15 @@ def make_dir(path: str):
         os.makedirs(path)
 
 
-def find_files(path: str, pattern: str):    
-    for root, _, files in os.walk(path):        
+def find_files(path: str, pattern: str):
+    for root, _, files in os.walk(path):
         for basename in files:                        
             if fnmatch.fnmatch(basename, pattern):
                 filename = os.path.realpath(os.path.join(root, basename))
                 yield filename
 
 
-def extract(videos_path: str, pattern: str, output_path: str, predictor_path: str):
+def extract(videos_path: str, pattern: str, output_path: str, predictor_path: str, first_video: int, last_video: int):
     """
     Extracts the frames in all videos inside videos_path that match pattern
 
@@ -45,61 +47,100 @@ def extract(videos_path: str, pattern: str, output_path: str, predictor_path: st
     print('\nEXTRACT\n')
     print('Searching for files in: {}\nMatch for: {}'.format(videos_path, pattern))
 
-    for file_path in find_files(videos_path, pattern):        
+    # Read what videos already success
+    videos_already_made = []
+    f = open(os.path.join(output_path, "videos_success.txt"), "r+")
+    fLines = f.readlines()
+    for l in fLines:
+        videos_already_made.append(l.rstrip()) # remove line break
+
+    last_group_dir = ""
+    count_in_video = 0
+    for file_path in find_files(videos_path, pattern):
         group_dir = os.path.basename(os.path.dirname(file_path))
         video_dir = os.path.splitext(os.path.basename(file_path))[0]
+
+        if group_dir == last_group_dir:
+            count_in_video += 1
+        else:
+            count_in_video = 0
+
+        last_group_dir = group_dir
+
+        if count_in_video > last_video or count_in_video < first_video:
+            continue
+
+
 
         video_full_dir = os.path.join(group_dir, video_dir)
 
         vid_cutouts_target_dir = os.path.join(output_path, video_full_dir)
+
+        # if the video is already made the
+        if video_full_dir in videos_already_made:
+            print("Video was previously extracted " + video_full_dir + "\n")
+            continue
+
         make_dir(vid_cutouts_target_dir)
 
-        video_to_frames(file_path, vid_cutouts_target_dir, predictor_path)
+        if not video_to_frames(file_path, vid_cutouts_target_dir, predictor_path):
+            count_in_video -= 1
+            if count_in_video < 0:
+                count_in_video = 0
+            shutil.rmtree(vid_cutouts_target_dir)
+            f = open(os.path.join(output_path, "videos_fail.txt"), "a+")
+            f.write(video_full_dir + "\n")
+        else:
+            f = open(os.path.join(output_path, "videos_success.txt"), "a+")
+            f.write(video_full_dir + "\n")
 
     print('Finished extraction successfully\n')
 
 
 if __name__ == '__main__':
-    argv_len = len(sys.argv)
+    '''
+        extract.py
+            Extracts the frames in all videos inside videos_path that match pattern
 
-    if argv_len < 3 or argv_len > 5:
-        print('''
-    extract.py
-        Extracts the frames in all videos inside videos_path that match pattern
-    
-    Usage:
-        python extract.py [videos_path] [pattern] [output_path] [predictor_path]
-        
-        videos_path         Path to videos directory
-        pattern             (Optional) Filename pattern to match
-        output_path         Path for the extracted frames
-        predictor_path      (Optional) Path to the predictor .dat file
+        Usage:
+            python extract.py [videos_path] [pattern] [output_path] [predictor_path]
 
-    Example:
-        python extract.py data/dataset *.mpg data/target data/predictors/shape_predictor_68_face_landmarks.dat
+            videos_path         Path to videos directory
+            pattern             (Optional) Filename pattern to match
+            output_path         Path for the extracted frames
+            from_video          (Optional) First video extracted in each speaker inclusive
+            to_video            (Optional) Last video extracted in each speaker inclusive
+            predictor_path      (Optional) Path to the predictor .dat file
 
-''')
-        exit()
+        Example:
+            python extract.py -v data/dataset -p *.mpg -o data/target -fv 0 -lv 1000 -pp data/predictors/shape_predictor_68_face_landmarks.dat
 
-    i_path = None
-    o_path = None
-    pat = '*.mpg'
-    p_path = os.path.join(__file__, '..', '..', 'data', 'predictors', 'shape_predictor_68_face_landmarks.dat')
+    '''
 
-    if argv_len == 3:
-        i_path = sys.argv[1]
-        o_path = sys.argv[2]
+    # construct the argument parser and parse the arguments
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-v", "--videos-path", required=True, help="Path to videos directory")
+    ap.add_argument("-p", "--pattern", required=False, help="(Optional) Filename pattern to match", default='*.mpg')
+    ap.add_argument("-o", "--outputh-path", required=True, help="Path for the extracted frames")
+    ap.add_argument("-fv", "--first-video", required=False, help="(Optional) First video extracted in each speaker inclusive", type=int,
+                    default=0)
+    ap.add_argument("-lv", "--last-video", required=False, help="(Optional) Lasst video extracted in each speaker inclusive", type=int,
+                    default=1000)
+    ap.add_argument("-pp", "--predictor-path", required=False, help="(Optional) Path to the predictor .dat file",
+                    default=os.path.join(__file__, '..', '..', 'data', 'predictors', 'shape_predictor_68_face_landmarks.dat'))
 
-    if argv_len >= 4:
-        i_path = sys.argv[1]
-        pat = sys.argv[2]
-        o_path = sys.argv[3]
 
-    if argv_len == 5:
-        p_path = sys.argv[4]
+    args = vars(ap.parse_args())
+
+    i_path = args["videos_path"]
+    o_path = args["outputh_path"]
+    pat = args["pattern"]
+    first_video = args["first_video"]
+    last_video = args["last_video"]
+    p_path = args["predictor_path"]
 
     if i_path is None or o_path is None:
         print('Both input and output are required\n')
         exit()
 
-    extract(i_path, pat, o_path, p_path)
+    extract(i_path, pat, o_path, p_path, first_video=first_video, last_video=last_video)

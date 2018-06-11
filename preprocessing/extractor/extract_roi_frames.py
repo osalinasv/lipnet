@@ -15,6 +15,11 @@ HORIZONTAL_PAD = 0.10
 
 
 def video_to_frames(file_path: str, output_dir: str, predictor_path: str):
+    """"
+    :return
+        false in case no mouth is detected in a frame
+        true if everything is rigth
+    """
     video_object = skvideo.io.vread(file_path)
     frames = np.array([frame for frame in video_object])
 
@@ -26,10 +31,13 @@ def video_to_frames(file_path: str, output_dir: str, predictor_path: str):
         filename = '{:05}.jpg'.format(i + 1)
         output_cutout_file_path = os.path.join(output_dir, filename)
 
-        io.imsave(output_cutout_file_path, extract_mouth(frame, predictor_path))
+        mouth = extract_mouth(frame, predictor_path)
+        if mouth is None:
+            return False
+        io.imsave(output_cutout_file_path, mouth)
         bar.next()
-
     bar.finish()
+    return True
 
 
 def extract_mouth(frame, predictor_path: str):
@@ -37,6 +45,7 @@ def extract_mouth(frame, predictor_path: str):
     predictor = dlib.shape_predictor(predictor_path)
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
 
     for i, rect in enumerate(detector(gray, 1)):
         shape = predictor(gray, rect)
@@ -72,6 +81,16 @@ def crop_mouth_region(np_mouth_points, frame):
     mouth_r = int(mouth_centroid_norm[0] + MOUTH_WIDTH / 2)
     mouth_t = int(mouth_centroid_norm[1] - MOUTH_HEIGHT / 2)
     mouth_b = int(mouth_centroid_norm[1] + MOUTH_HEIGHT / 2)
+
+    # This is wrong is still making the
+    # TODO: i make the chance but i have to be one hundred porcent sure
+    diff_width = mouth_r - mouth_l
+    if diff_width > MOUTH_WIDTH:
+        mouth_r += MOUTH_WIDTH - diff_width
+
+    diff_height = mouth_b - mouth_t
+    if diff_height > MOUTH_HEIGHT:
+        mouth_b += MOUTH_HEIGHT - diff_height
 
     mouth_crop_image = resized_img[mouth_t:mouth_b, mouth_l:mouth_r]
     return mouth_crop_image
