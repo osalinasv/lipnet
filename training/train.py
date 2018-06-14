@@ -51,20 +51,20 @@ def train(*, run_name: str, start_epoch: int, stop_epoch: int, frame_count: int,
 
 if __name__ == '__main__':
     name = datetime.datetime.now().strftime('%Y:%m:%d:%H:%M:%S')
-    
+
     print('CURRENT_PATH: {}'.format(CURRENT_PATH))
     print('ROOT_PATH: {}'.format(ROOT_PATH))
     print('DICTIONARY_PATH: {}'.format(DICTIONARY_PATH))
     print('OUTPUT_DIR: {}'.format(OUTPUT_DIR))
     print('LOG_DIR: {}'.format(LOG_DIR))
-    
+
     # train(
-    #     run_name=name,
-    #     start_epoch=0,
-    #     stop_epoch=5000,
-    #     frame_count=75,
-    #     image_channels=3,
-    #     image_height=50,
-    #     image_width=100,
-    #     max_string=32,
+    #     run_name = name,
+    #     start_epoch = 0,
+    #     stop_epoch = 5000,
+    #     frame_count = 75,
+    #     image_channels= 3,
+    #     image_height = 50,
+    #     image_width = 100,
+    #     max_string = 32,
     # )

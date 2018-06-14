@@ -46,7 +46,6 @@ def extract_mouth(frame, predictor_path: str):
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-
     for i, rect in enumerate(detector(gray, 1)):
         shape = predictor(gray, rect)
         shape = face_utils.shape_to_np(shape)

@@ -4,19 +4,8 @@ import sys
 import shutil
 import argparse
 
-from extractor.extract_roi_frames import video_to_frames
-
-def make_dir(path: str):
-    if not os.path.exists(path) or not os.path.isdir(path):
-        os.makedirs(path)
-
-
-def find_files(path: str, pattern: str):
-    for root, _, files in os.walk(path):
-        for basename in files:                        
-            if fnmatch.fnmatch(basename, pattern):
-                filename = os.path.realpath(os.path.join(root, basename))
-                yield filename
+from preprocessing.extractor.extract_roi_frames import video_to_frames
+from common.files import make_dir, find_files
 
 
 def extract(videos_path: str, pattern: str, output_path: str, predictor_path: str, first_video: int, last_video: int):
@@ -52,7 +41,7 @@ def extract(videos_path: str, pattern: str, output_path: str, predictor_path: st
     f = open(os.path.join(output_path, "videos_success.txt"), "r+")
     fLines = f.readlines()
     for l in fLines:
-        videos_already_made.append(l.rstrip()) # remove line break
+        videos_already_made.append(l.rstrip())  # remove line break
 
     last_group_dir = ""
     count_in_video = 0
@@ -69,8 +58,6 @@ def extract(videos_path: str, pattern: str, output_path: str, predictor_path: st
 
         if count_in_video > last_video or count_in_video < first_video:
             continue
-
-
 
         video_full_dir = os.path.join(group_dir, video_dir)
 
@@ -119,16 +106,18 @@ if __name__ == '__main__':
 
     # construct the argument parser and parse the arguments
     ap = argparse.ArgumentParser()
-    ap.add_argument("-v", "--videos-path", required=True, help="Path to videos directory")
-    ap.add_argument("-p", "--pattern", required=False, help="(Optional) Filename pattern to match", default='*.mpg')
-    ap.add_argument("-o", "--outputh-path", required=True, help="Path for the extracted frames")
+    ap.add_argument("-v", "--videos-path", required=True,
+                    help="Path to videos directory")
+    ap.add_argument("-p", "--pattern", required=False,
+                    help="(Optional) Filename pattern to match", default='*.mpg')
+    ap.add_argument("-o", "--outputh-path", required=True,
+                    help="Path for the extracted frames")
     ap.add_argument("-fv", "--first-video", required=False, help="(Optional) First video extracted in each speaker inclusive", type=int,
                     default=0)
     ap.add_argument("-lv", "--last-video", required=False, help="(Optional) Lasst video extracted in each speaker inclusive", type=int,
                     default=1000)
     ap.add_argument("-pp", "--predictor-path", required=False, help="(Optional) Path to the predictor .dat file",
                     default=os.path.join(__file__, '..', '..', 'data', 'predictors', 'shape_predictor_68_face_landmarks.dat'))
-
 
     args = vars(ap.parse_args())
 
@@ -143,4 +132,5 @@ if __name__ == '__main__':
         print('Both input and output are required\n')
         exit()
 
-    extract(i_path, pat, o_path, p_path, first_video=first_video, last_video=last_video)
+    extract(i_path, pat, o_path, p_path,
+            first_video=first_video, last_video=last_video)

@@ -1,7 +1,7 @@
 import sys
 import os
 import numpy as np
-from extract import find_files, make_dir
+from common.files import find_files, make_dir
 from keras.preprocessing.image import ImageDataGenerator, img_to_array, load_img, array_to_img
 
 IMAGE_HEIGHT = 50
@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     i_path = None
     o_path = None
-    pat = '*.jpg'    
+    pat = '*.jpg'
 
     if argv_len == 3:
         i_path = sys.argv[1]
@@ -47,32 +47,32 @@ if __name__ == '__main__':
         exit()
 
     rois_path = os.path.realpath(i_path)
-    output_path = os.path.realpath(o_path)    
-        
+    output_path = os.path.realpath(o_path)
+
     train_files = []
     standardize_files = []
-    
+
     old_standardize_dir = ""
-    for file_path in find_files(i_path, pat):                       
+    for file_path in find_files(i_path, pat):
         # save the path from train image
 
         train_files.append(file_path)
 
-        # save the path to the standardize image                
+        # save the path to the standardize image
         output_standardize_file_path = file_path.replace(rois_path, output_path)
         # make dir for standadize images
-        current_standardize_dir = os.path.dirname(os.path.abspath(output_standardize_file_path))        
+        current_standardize_dir = os.path.dirname(os.path.abspath(output_standardize_file_path))
         if current_standardize_dir != old_standardize_dir:
-            make_dir(current_standardize_dir)            
-        old_standardize_dir = current_standardize_dir        
-        
-        standardize_files.append(output_standardize_file_path)                
+            make_dir(current_standardize_dir)
+        old_standardize_dir = current_standardize_dir
+
+        standardize_files.append(output_standardize_file_path)
 
     # put image in an array
     dataset = np.ndarray(shape=(len(train_files), IMAGE_HEIGHT, IMAGE_WIDTH, CHANNELS),
-                        dtype=np.float32)
+                         dtype=np.float32)
 
-    i = 0    
+    i = 0
     for _file in train_files:
         print(_file)
         img = load_img(_file)  # this is a PIL image
@@ -89,15 +89,9 @@ if __name__ == '__main__':
 
     i = 0
     for img_array in dataset:
-        standardize_img = array_to_img(img_array)        
+        standardize_img = array_to_img(img_array)
         standardize_path = standardize_files[i]
-        
+
         standardize_img.save(standardize_path)
-        
+
         i += 1
-        
-    
-
-
-
-

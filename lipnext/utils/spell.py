@@ -66,6 +66,7 @@ class Spell(object):
         transposes = [L + R[1] + R[0] + R[2:] for L, R in splits if len(R) > 1]
         replaces = [L + c + R[1:] for L, R in splits if R for c in letters]
         inserts = [L + c + R for L, R in splits for c in letters]
+
         return set(deletes + transposes + replaces + inserts)
 
     @staticmethod
