@@ -14,13 +14,7 @@ from lipnext.model.layers import CTC
 
 
 class LipNext(object):
-    IMAGE_WIDTH = 100
-    IMAGE_HEIGHT = 50
-    IMAGE_CHANNELS = 3
-    FRAME_RATE = 30
-    MAX_STRING = 32
     OUTPUT_SIZE = 28
-
     INPUT_TYPE = 'float32'
 
     ZERO_PADDING = (1, 2, 2)
@@ -43,8 +37,7 @@ class LipNext(object):
     ADAM_S_MOMENTUM = 0.999
     ADAM_STABILITY = 1e-08
 
-    def __init__(self, *, frame_count: int = FRAME_RATE, image_channels: int = IMAGE_CHANNELS,
-                 image_height: int = IMAGE_HEIGHT, image_width: int = IMAGE_WIDTH, max_string: int = MAX_STRING,
+    def __init__(self, *, frame_count: int, image_channels: int, image_height: int, image_width: int, max_string: int,
                  output_size: int = OUTPUT_SIZE):
         self.image_width = image_width
         self.image_height = image_height
@@ -123,9 +116,9 @@ class LipNext(object):
             initial_epoch=start_epoch,
             epochs=stop_epoch,
             verbose=1,
-            max_q_size=5,
+            # max_q_size=5,
             workers=2,
-            pickle_safe=True
+            # pickle_safe=True
         )
 
     def summary(self):
@@ -170,7 +163,13 @@ class LipNext(object):
 
 
 if __name__ == '__main__':
-    lipnext = LipNext()
+    lipnext = LipNext(
+        frame_count=3,
+        image_channels=3,
+        image_height=50,
+        image_width=100,
+        max_string=32
+    )
 
     # lipnext.plot_model()
 

@@ -1,3 +1,6 @@
+# Helper functions to transform between text<->labels
+# Source: https://github.com/rizkiarm/LipNet/blob/master/lipnet/lipreading/helpers.py
+
 def text_to_labels(text: str) -> [chr]:
     ret = []
     for char in text:
