@@ -1,6 +1,6 @@
 import os
+import numpy as np
 
-import numpy as np  # linear algebra
 from IPython.display import Image as _Imgdis, display
 from sklearn import preprocessing
 
@@ -12,8 +12,8 @@ print("Working with {0} images".format(len(onlyfiles)))
 print("Image examples: ")
 
 for i in range(40, 42):
-    print(onlyfiles[i])
-    display(_Imgdis(filename=folder + "/" + onlyfiles[i], width=240, height=320))
+	print(onlyfiles[i])
+	display(_Imgdis(filename=folder + "/" + onlyfiles[i], width=240, height=320))
 
 from keras.preprocessing.image import ImageDataGenerator, img_to_array, load_img
 
@@ -21,9 +21,9 @@ train_files = []
 # y_train = []
 i = 0
 for _file in onlyfiles:
-    train_files.append(_file)
-    # label_in_file = _file.find("_")
-    # y_train.append(int(_file[0:label_in_file]))
+	train_files.append(_file)
+	# label_in_file = _file.find("_")
+	# y_train.append(int(_file[0:label_in_file]))
 
 print("Files in train_files: %d" % len(train_files))
 
@@ -38,26 +38,26 @@ ratio = 4
 channels = 3
 nb_classes = 1
 
-dataset = np.ndarray(shape=(len(train_files), image_height, image_width, channels),
-                     dtype=np.float32)
-dataset_flat = np.ndarray(shape=(len(train_files), channels * image_height * image_width),
-                          dtype=np.float64)
+dataset = np.ndarray(shape=(len(train_files), image_height, image_width, channels), dtype=np.float32)
+dataset_flat = np.ndarray(shape=(len(train_files), channels * image_height * image_width), dtype=np.float64)
 
 i = 0
 for _file in train_files:
-    img = load_img(folder + "/" + _file)  # this is a PIL image
-    img.thumbnail((image_width, image_height))
-    # Convert to Numpy Array
-    x = img_to_array(img)
-    # x = x.reshape((3, image_height, image_width))
-    x_plane = x.reshape((3 * image_height * image_width))
-    # Normalize
-    # x = (x - 128.0) / 128.0
-    dataset[i] = x
-    dataset_flat[i] = x_plane
-    i += 1
-    if i % 250 == 0:
-        print("%d images to array" % i)
+	img = load_img(folder + "/" + _file)  # this is a PIL image
+	img.thumbnail((image_width, image_height))
+	# Convert to Numpy Array
+	x = img_to_array(img)
+	# x = x.reshape((3, image_height, image_width))
+	x_plane = x.reshape((3 * image_height * image_width))
+	# Normalize
+	# x = (x - 128.0) / 128.0
+	dataset[i] = x
+	dataset_flat[i] = x_plane
+	i += 1
+
+	if i % 250 == 0:
+		print("%d images to array" % i)
+
 print("All images to array!")
 
 print(dataset_flat[0])
@@ -74,15 +74,13 @@ datagen.fit(dataset)
 print("Dataset standarized")
 
 for X_batch1, Y_batch1 in datagen.flow(dataset, batch_size=20):
-    print(X_batch1[0])
+	print(X_batch1[0])
 
 # X_scaled = (dataset - dataset.mean()) / dataset.std()
 # print(X_scaled)
 
 
-X_p = np.array([[1., -1., 2.],
-                [2., 0., 0.],
-                [0., 1., -1.]])
+X_p = np.array([[1., -1., 2.], [2., 0., 0.], [0., 1., -1.]])
 
 X_s_library = preprocessing.scale(X_p)
 
