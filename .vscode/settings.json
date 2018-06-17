@@ -1,0 +1,8 @@
+{
+	"editor.tabSize": 2,
+	"editor.insertSpaces": false,
+	"editor.rulers": [ 120 ],
+	"editor.wordWrap": "wordWrapColumn",
+	"editor.wrappingIndent": "none",
+	"editor.wordWrapColumn": 120
+}
