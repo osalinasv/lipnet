@@ -6,7 +6,7 @@ from keras.callbacks import Callback
 from lipnext.helpers.threadsafe import threadsafe_generator, get_list_safe
 
 
-class VideoGenerator(Callback):
+class BatchGenerator(Callback):
 
 	def __init__(self, *, dataset_path: str, minibatch_size: int, frame_count: int, image_channels: int, image_height: int, image_width: int, max_string: int):
 		self.dataset_path = os.path.realpath(dataset_path)
@@ -136,7 +136,7 @@ class VideoGenerator(Callback):
 
 
 if __name__ == '__main__':
-	generator = VideoGenerator(
+	generator = BatchGenerator(
 		dataset_path='path',
 		minibatch_size=50,
 		frame_count=30,
