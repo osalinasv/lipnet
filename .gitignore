@@ -165,6 +165,8 @@ data/results
 data/target
 data/standardize
 data/align
+data/train
+data/val
 
 preprocessing/alignment
 preprocessing/detect-face-parts/pruebas

@@ -82,7 +82,6 @@ def crop_mouth_region(np_mouth_points, frame):
 	mouth_b = int(mouth_centroid_norm[1] + MOUTH_HEIGHT / 2)
 
 	# This is wrong is still making the
-	# TODO: i make the chance but i have to be one hundred porcent sure
 	diff_width = mouth_r - mouth_l
 	if diff_width > MOUTH_WIDTH:
 		mouth_r += MOUTH_WIDTH - diff_width
