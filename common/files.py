@@ -27,3 +27,11 @@ def walklevel(some_dir, level=1):
 
 		if num_sep + level <= num_sep_this:
 			del dirs[:]
+
+def read_subfolders(path):
+	subfolders = []
+	for subdir, _, _ in walklevel(path):
+		if subdir == path:
+			continue
+		subfolders.append(subdir)
+	return subfolders
