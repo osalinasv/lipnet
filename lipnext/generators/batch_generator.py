@@ -35,6 +35,8 @@ class BatchGenerator(Callback):
 		self.val_list = []
 		self.train_list = []
 
+		self.build_dataset()
+
 	@threadsafe_generator
 	def train_generator(self):
 		while True:
@@ -92,6 +94,15 @@ class BatchGenerator(Callback):
 	@property
 	def default_validation_steps(self) -> int:
 		return self.validation_size / self.minibatch_size
+
+	def get_output_size(self):
+		return 28
+
+	def get_cache_path(self):
+		return self.dataset_path.rstrip('/') + '.cache'
+
+	def build_dataset(self):
+		pass
 
 	def get_batch(self, index: int, size: int, training: bool = True) -> (dict, dict):
 		video_list = self.train_list if training else self.val_list
