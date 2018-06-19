@@ -4,7 +4,7 @@ import sys
 from common.files import make_dir
 import argparse
 
-sys.path.append("..\..")
+sys.path.append("..\\..")
 
 def generate_train_val(mouths_path, destination_path, train_size, val_size):
 	"""
