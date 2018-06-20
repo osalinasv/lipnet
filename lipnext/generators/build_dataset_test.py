@@ -3,6 +3,8 @@ import os
 import glob
 import numpy as np
 import argparse
+from scipy import ndimage
+from keras import backend as K
 import sys
 sys.path.append("..\\..")
 from common.files import read_subfolders
@@ -28,26 +30,12 @@ class Dataset(object):
                 self.train_list, self.val_list, self.align_hash = pickle.load(fp)
         else:
             print("\nEnumerating dataset list from disk...")
-            #self.train_list = self.enumerate_videos(os.path.join(self.train_path, '*', '*'))
             self.train_list = read_subfolders(self.train_path)
-            print("\nTrain: {}".format(self.train_list))
             self.val_list = read_subfolders(self.val_path)
-            #self.val_list   = self.enumerate_videos(os.path.join(self.val_path, '*', '*'))
-            #print("\nVal: {}".format(self.val_list))
             self.align_hash = self.enumerate_align_hash(self.train_list + self.val_list)
             with open(self.get_cache_path(), 'wb') as fp:
                 pickle.dump((self.train_list, self.val_list, self.align_hash), fp)
         print(cache_path)
-        print("Found {} videos for training.".format(self.training_size))
-        print("Found {} videos for validation.".format(self.validation_size))
-        print("")
-
-    def enumerate_videos(self, path):
-        video_list = []
-        for video_path in glob.glob(path):
-
-            video_list.append(video_path)
-        return video_list
 
     def enumerate_align_hash(self, video_list):
         align_hash = {}
@@ -56,6 +44,75 @@ class Dataset(object):
             align_path = os.path.join(self.align_path, video_id)+".align"
             align_hash[video_id] = Align(self.absolute_max_string_len).from_file(align_path)
         return align_hash
+
+    def read_dataset(self, index, size, train):
+        if train:
+            video_list = self.train_list
+        else:
+            video_list = self.val_list
+
+        X_data_path = self.get_sublist(video_list, index, size)
+        X_data = []
+        Y_data = []
+        label_length = []
+        input_length = []
+        source_str = []
+        for path in X_data_path:
+            frames = Frames()
+            align = self.align_hash[path.split('\\')[-1]]
+            X_data.append(frames.read_frames(path))
+            Y_data.append(align.padded_label)
+            label_length.append(align.label_length)  # CHANGED [A] -> A, CHECK!
+            # input_length.append([video_unpadded_length - 2]) # 2 first frame discarded
+            input_length.append(
+                frames.length)  # Just use the video padded length to avoid CTC No path found error (v_len < a_len)
+            source_str.append(align.sentence)  # CHANGED [A] -> A, CHECK!
+
+        source_str = np.array(source_str)
+        label_length = np.array(label_length)
+        input_length = np.array(input_length)
+        Y_data = np.array(Y_data)
+        X_data = np.array(X_data).astype(
+            np.float32) / 255  # Normalize image data to [0,1], TODO: mean normalization over training data
+
+        inputs = {'the_input': X_data,
+                  'the_labels': Y_data,
+                  'input_length': input_length,
+                  'label_length': label_length,
+                  'source_str': source_str  # used for visualization only
+                  }
+        outputs = {'ctc': np.zeros([size])}  # dummy data for dummy loss function
+
+        return (inputs, outputs)
+
+    def get_sublist(self, l, index, size):
+        ret = l[index:index + size]
+        while size - len(ret) > 0:
+            ret += l[0:size - len(ret)]
+        return ret
+
+
+
+class Frames(object):
+    def read_frames(self, path):
+        frames_path = sorted([os.path.join(path, x) for x in os.listdir(path)])
+        frames = [ndimage.imread(frame_path) for frame_path in frames_path]
+        return self.set_data(frames)
+
+    def set_data(self, frames):
+        data_frames = []
+        for frame in frames:
+            frame = frame.swapaxes(0, 1)  # swap width and height to form format W x H x C
+            if len(frame.shape) < 3:
+                frame = np.array([frame]).swapaxes(0, 2).swapaxes(0, 1)  # Add grayscale channel
+            data_frames.append(frame)
+        frames_n = len(data_frames)
+        data_frames = np.array(data_frames)  # T x W x H x C
+        if K.image_data_format() == 'channels_first':
+            data_frames = np.rollaxis(data_frames, 3)  # C x T x W x H
+        self.data = data_frames
+        self.length = frames_n
+        return self.data
 
 class Align(object):
     def __init__(self, absolute_max_string_len=32):
@@ -94,6 +151,11 @@ class Align(object):
         padding = np.ones((self.absolute_max_string_len-len(label))) * -1
         return np.concatenate((np.array(label), padding), axis=0)
 
+    @property
+    def label_length(self):
+        return len(self.label)
+
+
 if __name__ == '__main__':
     '''
     build_dataset_test.py
@@ -116,7 +178,11 @@ if __name__ == '__main__':
     data_path = args["data_path"]
     max_string_len = args["max_string_len"]
 
-    dataset = Dataset(data_path, 32).build_dataset()
+    dataset = Dataset(data_path, 32)
+    dataset.build_dataset()
+    test = dataset.read_dataset(0, 10, train=True)
+    print(test)
+
 
 
 
