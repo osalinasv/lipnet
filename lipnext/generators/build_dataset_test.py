@@ -1,10 +1,7 @@
-import os
-import multiprocessing
-import numpy as np
 import pickle
-
-from keras.callbacks import Callback
-from lipnext.helpers.threadsafe import threadsafe_generator
+import os
+import numpy as np
+import argparse
 from scipy import ndimage
 from keras import backend as K
 import sys
@@ -12,39 +9,13 @@ sys.path.append("..\\..")
 from common.files import read_subfolders
 
 
-class BatchGenerator(Callback):
-
-
-    def __init__(self, *, dataset_path: str, minibatch_size: int, frame_count: int, image_channels: int,
-                 image_height: int, image_width: int, max_string: int):
-        self.data_path = os.path.realpath(dataset_path)
-
+class Dataset(object):
+    def __init__(self, data_path, absolute_max_string_len=30):
+        self.data_path = data_path
+        self.absolute_max_string_len = absolute_max_string_len
         self.train_path = os.path.join(self.data_path, 'train')
         self.val_path = os.path.join(self.data_path, 'val')
         self.align_path = os.path.join(self.data_path, 'align')
-
-        self.minibatch_size = minibatch_size
-        self.frame_count = frame_count
-        self.image_channels = image_channels
-        self.image_height = image_height
-        self.image_width = image_width
-        self.max_string = max_string
-
-        self.cur_train_index = multiprocessing.Value('i', 0)
-        self.cur_val_index = multiprocessing.Value('i', 0)
-
-        self.shared_train_epoch = multiprocessing.Value('i', -1)
-        self.process_train_index = -1
-        self.process_val_index = -1
-		
-        self.steps_per_epoch = self.default_training_steps if self.steps_per_epoch is None else self.steps_per_epoch
-        self.validation_steps = self.default_validation_steps if self.validation_steps is None else self.validation_steps
-
-        self.val_list = []
-        self.train_list = []
-        self.align_hash = {}
-
-        self.build_dataset()
 
     def get_cache_path(self):
         return self.data_path.rstrip('/') + '.cache'
@@ -119,106 +90,7 @@ class BatchGenerator(Callback):
             ret += l[0:size - len(ret)]
         return ret
 
-    @threadsafe_generator
-    def train_generator(self):
-        while True:
-            with self.cur_train_index.get_lock(), self.shared_train_epoch.get_lock():
-                train_index = self.cur_train_index.value
-                self.cur_train_index.value += self.minibatch_size
 
-                if train_index >= self.steps_per_epoch * self.minibatch_size:
-                    train_index = 0
-                    self.shared_train_epoch.value += 1
-                    self.cur_train_index.value = self.minibatch_size
-
-                if self.shared_train_epoch.value < 0:
-                    self.shared_train_epoch.value += 1
-
-                # Shared index overflow
-                if self.cur_train_index.value >= self.training_size:
-                    self.cur_train_index.value = self.cur_train_index.value % self.minibatch_size
-
-            batch = self.read_dataset(train_index, self.minibatch_size, train=True)
-            yield batch
-  
-  @threadsafe_generator
-    def val_generator(self):
-        while True:
-            with self.cur_val_index.get_lock():
-                val_index = self.cur_val_index.value
-                self.cur_val_index.value += self.minibatch_size
-
-                if self.cur_val_index.value >= self.validation_size:
-                    self.cur_val_index.value = self.cur_val_index.value % self.minibatch_size
-
-            batch = self.read_dataset(val_index, self.minibatch_size, train=False)
-            yield batch
-
-	def build_dataset(self):
-		if os.path.isfile(self.get_cache_path()):
-			print('\nLoading dataset from cached file...')
-
-			with open(self.get_cache_path(), 'rb') as fp:
-				self.train_list, self.val_list, self.align_hash = pickle.load(fp)
-		else:
-			print('\nLoading dataset from disk...')
-
-			self.train_list = self.enumerate_videos(os.path.join(self.train_path, '*', '*'))
-			self.val_list   = self.enumerate_videos(os.path.join(self.val_path, '*', '*'))
-			self.align_hash = self.enumerate_align_hash(self.train_list + self.val_list)
-
-			with open(self.get_cache_path(), 'wb') as fp:
-					pickle.dump((self.train_list, self.val_list, self.align_hash), fp)
-
-			print("Found {} videos for training.".format(self.training_size))
-			print("Found {} videos for validation.".format(self.validation_size))
-
-			np.random.shuffle(self.train_list)
-
-	def enumerate_align_hash(self, video_list):
-		align_hash = {}
-
-		for video_path in video_list:
-				video_id = os.path.splitext(video_path)[0].split('/')[-1]
-				align_path = os.path.join(self.align_path, video_id, '.align')
-				align_hash[video_id] = self.get_align_from_path(align_path)
-
-		return align_hash
-
-	def get_align(self, _id: str) -> str:
-		return self.align_hash[_id]
-
-	def get_batch(self, index: int, size: int, training: bool = True) -> (dict, dict):
-		video_list = self.train_list if training else self.val_list
-
-            batch = self.read_dataset(val_index, self.minibatch_size, train=False)
-            yield batch
-
-    def on_train_begin(self, logs={}):
-        with self.cur_train_index.get_lock():
-            self.cur_train_index.value = 0
-
-        with self.cur_val_index.get_lock():
-            self.cur_val_index.value = 0
-
-    @property
-    def training_size(self) -> int:
-        return len(self.train_list)
-
-    @property
-    def default_training_steps(self) -> int:
-        return self.training_size / self.minibatch_size
-
-    @property
-    def validation_size(self) -> int:
-        return len(self.val_list)
-
-    @property
-    def default_validation_steps(self) -> int:
-        return self.validation_size / self.minibatch_size
-
-    def get_output_size(self):
-        return 28
 
 class Frames(object):
     def get_data(self, path):
@@ -284,18 +156,32 @@ class Align(object):
 
 
 if __name__ == '__main__':
-    generator = BatchGenerator(
-        dataset_path='path',
-        minibatch_size=50,
-        frame_count=30,
-        image_channels=3,
-        image_height=50,
-        image_width=100,
-        max_string=32
-    )
+    '''
+    build_dataset_test.py
+    Obtains the path to the validation and training folders    
+    
+    Usage:
+        >>> python build_dataset_test.py -d [data_path] -m [max_string_len]
+    
+    Example:
+        >>> python build_dataset_test.py -d ..\..\data
+    
+    '''
+    # TODO: change instead of specify the train number an val number only specify the porcentage of training and have the option to clear the current folders
+    # construct the argument parser and parse the arguments
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-d", "--data-path", required=True, help="Path to data")
+    ap.add_argument("-m", "--max-string-len", required=False, help="(Optional) Max string lenght",type=int, default=32)
+    args = vars(ap.parse_args())
 
-    for idx, res in enumerate(generator.train_generator()):
-        if idx >= 10:
-            break
+    data_path = args["data_path"]
+    max_string_len = args["max_string_len"]
 
-        print(res)
+    dataset = Dataset(data_path, 32)
+    dataset.build_dataset()
+    test = dataset.read_dataset(0, 10, train=True)
+    print(test)
+
+
+
+
