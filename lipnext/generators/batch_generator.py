@@ -1,6 +1,7 @@
 import os
 import multiprocessing
 import numpy as np
+import pickle
 
 from keras.callbacks import Callback
 from lipnext.helpers.threadsafe import threadsafe_generator, get_list_safe
@@ -34,6 +35,7 @@ class BatchGenerator(Callback):
 
 		self.val_list = []
 		self.train_list = []
+		self.align_hash = {}
 
 		self.build_dataset()
 
@@ -102,7 +104,38 @@ class BatchGenerator(Callback):
 		return self.dataset_path.rstrip('/') + '.cache'
 
 	def build_dataset(self):
-		pass
+		if os.path.isfile(self.get_cache_path()):
+			print('\nLoading dataset from cached file...')
+
+			with open(self.get_cache_path(), 'rb') as fp:
+				self.train_list, self.val_list, self.align_hash = pickle.load(fp)
+		else:
+			print('\nLoading dataset from disk...')
+
+			self.train_list = self.enumerate_videos(os.path.join(self.train_path, '*', '*'))
+			self.val_list   = self.enumerate_videos(os.path.join(self.val_path, '*', '*'))
+			self.align_hash = self.enumerate_align_hash(self.train_list + self.val_list)
+
+			with open(self.get_cache_path(), 'wb') as fp:
+					pickle.dump((self.train_list, self.val_list, self.align_hash), fp)
+
+			print("Found {} videos for training.".format(self.training_size))
+			print("Found {} videos for validation.".format(self.validation_size))
+
+			np.random.shuffle(self.train_list)
+
+	def enumerate_align_hash(self, video_list):
+		align_hash = {}
+
+		for video_path in video_list:
+				video_id = os.path.splitext(video_path)[0].split('/')[-1]
+				align_path = os.path.join(self.align_path, video_id, '.align')
+				align_hash[video_id] = self.get_align_from_path(align_path)
+
+		return align_hash
+
+	def get_align(self, _id: str) -> str:
+		return self.align_hash[_id]
 
 	def get_batch(self, index: int, size: int, training: bool = True) -> (dict, dict):
 		video_list = self.train_list if training else self.val_list
@@ -139,10 +172,10 @@ class BatchGenerator(Callback):
 
 		return inputs, outputs
 
-	def get_frames(self, path: str) -> list:
+	def get_frames_from_path(self, path: str) -> list:
 		pass
 
-	def get_align(self, path: str) -> str:
+	def get_align_from_path(self, path: str) -> str:
 		pass
 
 
