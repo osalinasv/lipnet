@@ -1,6 +1,5 @@
 import pickle
 import os
-import glob
 import numpy as np
 import argparse
 from scipy import ndimage
@@ -60,7 +59,7 @@ class Dataset(object):
         for path in X_data_path:
             frames = Frames()
             align = self.align_hash[path.split('\\')[-1]]
-            X_data.append(frames.read_frames(path))
+            X_data.append(frames.get_data(path))
             Y_data.append(align.padded_label)
             label_length.append(align.label_length)  # CHANGED [A] -> A, CHECK!
             # input_length.append([video_unpadded_length - 2]) # 2 first frame discarded
@@ -94,7 +93,7 @@ class Dataset(object):
 
 
 class Frames(object):
-    def read_frames(self, path):
+    def get_data(self, path):
         frames_path = sorted([os.path.join(path, x) for x in os.listdir(path)])
         frames = [ndimage.imread(frame_path) for frame_path in frames_path]
         return self.set_data(frames)
