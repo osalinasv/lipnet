@@ -30,8 +30,11 @@ def walklevel(some_dir, level=1):
 
 def read_subfolders(path):
 	subfolders = []
+
 	for subdir, _, _ in walklevel(path):
 		if subdir == path:
 			continue
+
 		subfolders.append(subdir)
+
 	return subfolders

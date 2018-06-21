@@ -15,7 +15,7 @@ sys.path.append("..\\..")
 
 class BatchGenerator(Callback):
 
-	def __init__(self, *, dataset_path: str, minibatch_size: int, frame_count: int, image_channels: int, image_height: int, image_width: int, max_string: int, steps_per_epoch: int = None):
+	def __init__(self, *, dataset_path: str, minibatch_size: int, frame_count: int, image_channels: int, image_height: int, image_width: int, max_string: int, steps_per_epoch: int = None, validation_steps: int = None):
 		self.data_path = os.path.realpath(dataset_path)
 
 		self.train_path = os.path.join(self.data_path, 'train')
@@ -35,13 +35,13 @@ class BatchGenerator(Callback):
 		self.shared_train_epoch = multiprocessing.Value('i', -1)
 		self.process_train_index = -1
 		self.process_val_index = -1
-		
-		self.steps_per_epoch = self.default_training_steps if steps_per_epoch is None else steps_per_epoch
-		self.validation_steps = self.default_validation_steps if self.validation_steps is None else self.validation_steps
 
 		self.val_list = []
 		self.train_list = []
 		self.align_hash = {}
+		
+		self.steps_per_epoch = self.default_training_steps if steps_per_epoch is None else steps_per_epoch
+		self.validation_steps = self.default_validation_steps if validation_steps is None else validation_steps
 
 		self.build_dataset()
 
