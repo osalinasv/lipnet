@@ -1,10 +1,8 @@
 import datetime
 import os
 
-from keras.callbacks import CSVLogger, ModelCheckpoint, TensorBoard
+from common.files import make_dir
 
-from lipnext.model.v1 import LipNext
-from lipnext.utils.spell import Spell
 
 CURRENT_PATH = os.path.dirname(os.path.realpath(__file__))
 ROOT_PATH    = os.path.realpath(os.path.join(CURRENT_PATH, '..'))
@@ -14,41 +12,39 @@ OUTPUT_DIR      = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'results'))
 LOG_DIR         = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'logs'))
 
 
-def train(*, run_name: str, start_epoch: int, stop_epoch: int, frame_count: int, image_channels: int, image_height: int, image_width: int, max_string: int):
-	print("Started: Training...")
-	print("Running: {}".format(run_name))
+def train(run_name: str, epochs: int, frame_count: int, image_channels: int, image_height: int, image_width: int, max_string: int):
+	from keras.callbacks import ModelCheckpoint, TensorBoard
+	from lipnext.model.v2 import create_model, compile_model
 
-	lipnext = LipNext(
-		frame_count    = frame_count,
-		image_channels = image_channels,
-		image_height   = image_height,
-		image_width    = image_width,
-		max_string     = max_string
-	)
+	make_dir(OUTPUT_DIR)
+	make_dir(LOG_DIR)
 
-	lipnext.summary()
-	lipnext.compile()
+	print("\nStarted: Training...")
+	print("Running: {}\n".format(run_name))
 
-	spell = Spell(DICTIONARY_PATH)
+	model = create_model(frame_count, image_channels, image_height, image_width, max_string)
+	model.summary()
+
+	CHECKPOINT_DIR = os.path.join(OUTPUT_DIR, run_name)
+	make_dir(CHECKPOINT_DIR)
 
 	tensorboard = TensorBoard(log_dir=os.path.join(LOG_DIR, run_name))
-	csv_logger  = CSVLogger(os.path.join(LOG_DIR, "{}-{}.csv".format('training', run_name)), separator=',', append=True)
-	checkpoint  = ModelCheckpoint(os.path.join(OUTPUT_DIR, run_name, "weights{epoch:02d}.h5"), monitor='val_loss', save_weights_only=True, mode='auto', period=1)
+	checkpoint  = ModelCheckpoint(os.path.join(CHECKPOINT_DIR, "weights{epoch:04d}.h5"), monitor='val_loss', save_weights_only=True, mode='auto', period=1)
 
-	# TODO: set generator, validator, training_steps, validation_steps
-	lipnext.train(
+	compile_model(model)
+
+	model.fit_generator(
 		generator        = None,
-		validator        = None,
-		start_epoch      = start_epoch,
-		stop_epoch       = stop_epoch,
-		training_steps   = None,
-		validation_steps = None,
-		callbacks        = [checkpoint, tensorboard, csv_logger]
+		validation_data  = None,
+		epochs           = epochs,
+		verbose          = 1,
+		workers          = 2,
+		callbacks        = [checkpoint, tensorboard]
 	)
 
 
 if __name__ == '__main__':
-	name = datetime.datetime.now().strftime('%Y:%m:%d:%H:%M:%S')
+	name = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 
 	print('CURRENT_PATH: {}'.format(CURRENT_PATH))
 	print('ROOT_PATH: {}'.format(ROOT_PATH))

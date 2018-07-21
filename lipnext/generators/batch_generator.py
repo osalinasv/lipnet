@@ -162,7 +162,7 @@ class BatchGenerator(Callback):
 	def get_batch(self, index: int, size: int, training: bool = True) -> (dict, dict):
 		video_list = self.train_list if training else self.val_list
 
-		batch = self.read_dataset(val_index, self.minibatch_size, train=False)
+		batch = self.read_dataset(index, self.minibatch_size, train=False)
 		yield batch
 
 	def on_train_begin(self, logs={}):

@@ -2,16 +2,16 @@ import os
 import fnmatch
 
 def make_dir(path: str):
-    if not os.path.exists(path) or not os.path.isdir(path):
-        os.makedirs(path)
+	if not os.path.exists(path) or not os.path.isdir(path):
+		os.makedirs(path)
 
 
 def find_files(path: str, pattern: str):
-    for root, _, files in os.walk(path):
-        for basename in files:
-            if fnmatch.fnmatch(basename, pattern):
-                filename = os.path.realpath(os.path.join(root, basename))
-                yield filename
+	for root, _, files in os.walk(path):
+		for basename in files:
+			if fnmatch.fnmatch(basename, pattern):
+				yield os.path.realpath(os.path.join(root, basename))
+
 
 def walklevel(some_dir, level=1):
 	some_dir = some_dir.rstrip(os.path.sep)
@@ -27,6 +27,7 @@ def walklevel(some_dir, level=1):
 
 		if num_sep + level <= num_sep_this:
 			del dirs[:]
+
 
 def read_subfolders(path):
 	subfolders = []
