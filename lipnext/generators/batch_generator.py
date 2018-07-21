@@ -1,117 +1,109 @@
-import os
-import sys
 import multiprocessing
 import numpy as np
+import os
 import pickle
+import sys
 
-from keras.callbacks import Callback
-from lipnext.helpers.threadsafe import threadsafe_generator
-from scipy import ndimage
 from keras import backend as K
-from common.files import read_subfolders
-
-sys.path.append("..\\..")
+from keras.callbacks import Callback
+from scipy import ndimage
+from common.files import is_file, read_subfolders
+from lipnext.helpers.threadsafe import threadsafe_generator
 
 
 class BatchGenerator(Callback):
 
-	def __init__(self, *, dataset_path: str, minibatch_size: int, frame_count: int, image_channels: int, image_height: int, image_width: int, max_string: int, steps_per_epoch: int = None, validation_steps: int = None):
+	def __init__(self, dataset_path: str, minibatch_size: int, frame_count: int, image_channels: int, image_height: int, image_width: int, max_string: int, steps_per_epoch: int = None, validation_steps: int = None):
 		self.data_path = os.path.realpath(dataset_path)
 
 		self.train_path = os.path.join(self.data_path, 'train')
-		self.val_path = os.path.join(self.data_path, 'val')
+		self.val_path   = os.path.join(self.data_path, 'val')
 		self.align_path = os.path.join(self.data_path, 'align')
 
 		self.minibatch_size = minibatch_size
-		self.frame_count = frame_count
+		self.frame_count    = frame_count
 		self.image_channels = image_channels
-		self.image_height = image_height
-		self.image_width = image_width
-		self.max_string = max_string
+		self.image_height   = image_height
+		self.image_width    = image_width
+		self.max_string     = max_string
 
 		self.cur_train_index = multiprocessing.Value('i', 0)
-		self.cur_val_index = multiprocessing.Value('i', 0)
+		self.cur_val_index   = multiprocessing.Value('i', 0)
 
-		self.shared_train_epoch = multiprocessing.Value('i', -1)
+		self.shared_train_epoch  = multiprocessing.Value('i', -1)
 		self.process_train_index = -1
-		self.process_val_index = -1
+		self.process_val_index   = -1
 
-		self.val_list = []
+		self.val_list   = []
 		self.train_list = []
 		self.align_hash = {}
 		
-		self.steps_per_epoch = self.default_training_steps if steps_per_epoch is None else steps_per_epoch
+		self.steps_per_epoch  = self.default_training_steps if steps_per_epoch is None else steps_per_epoch
 		self.validation_steps = self.default_validation_steps if validation_steps is None else validation_steps
 
 		self.build_dataset()
 
-	def get_cache_path(self):
-		return self.data_path.rstrip('/') + '.cache'
-
 	def build_dataset(self):
-		cache_path = self.get_cache_path()
+		cache_path = self.cache_path
 
-		if os.path.isfile(self.get_cache_path()):
-			print("\nLoading dataset list from cache...")
-			with open (self.get_cache_path(), 'rb') as fp:
+		if is_file(cache_path):
+			print('\nLoading dataset list from cache...')
+
+			with open (cache_path, 'rb') as fp:
 				self.train_list, self.val_list, self.align_hash = pickle.load(fp)
-		else:
-			print("\nEnumerating dataset list from disk...")
-			self.train_list = read_subfolders(self.train_path)
-			self.val_list = read_subfolders(self.val_path)
-			self.align_hash = self.enumerate_align_hash(self.train_list + self.val_list)
-			with open(self.get_cache_path(), 'wb') as fp:
-				pickle.dump((self.train_list, self.val_list, self.align_hash), fp)
-		print(cache_path)
 
-	def enumerate_align_hash(self, video_list):
+		else:
+			print('\nEnumerating dataset list from disk...')
+
+			self.train_list = read_subfolders(self.train_path)
+			self.val_list   = read_subfolders(self.val_path)
+			self.align_hash = self.enumerate_align_hash(self.train_list + self.val_list)
+
+			with open(cache_path, 'wb') as fp:
+				pickle.dump((self.train_list, self.val_list, self.align_hash), fp)
+
+	def enumerate_align_hash(self, video_list: list) -> dict:
 		align_hash = {}
+
 		for video_path in video_list:
-			video_id = os.path.splitext(video_path)[0].split('\\')[-1]
-			align_path = os.path.join(self.align_path, video_id)+".align"
+			video_id   = os.path.splitext(video_path)[0].split('\\')[-1]
+			align_path = os.path.join(self.align_path, video_id) + '.align'
+
 			align_hash[video_id] = Align(self.max_string).from_file(align_path)
+
 		return align_hash
 
-	def read_dataset(self, index, size, train):
-		if train:
-			video_list = self.train_list
-		else:
-			video_list = self.val_list
-
+	def read_dataset(self, index: int, size: int, train: bool) -> (dict, dict):
+		video_list  = self.train_list if train else self.val_list
 		X_data_path = self.get_sublist(video_list, index, size)
+
 		X_data = []
 		Y_data = []
 		label_length = []
 		input_length = []
-		source_str = []
 
 		for path in X_data_path:
 			frames = Frames()
-			align = self.align_hash[path.split('\\')[-1]]
+			align  = self.align_hash[path.split('\\')[-1]]
+
 			X_data.append(frames.get_data(path))
 			Y_data.append(align.padded_label)
-			label_length.append(align.label_length)  # CHANGED [A] -> A, CHECK!
-			# input_length.append([video_unpadded_length - 2]) # 2 first frame discarded
-			input_length.append(
-				frames.length)  # Just use the video padded length to avoid CTC No path found error (v_len < a_len)
-			source_str.append(align.sentence)  # CHANGED [A] -> A, CHECK!
+			label_length.append(align.label_length)
+			input_length.append(frames.length)
 
-		source_str = np.array(source_str)
+		X_data = np.array(X_data).astype(np.float32) / 255
+		Y_data = np.array(Y_data)
 		label_length = np.array(label_length)
 		input_length = np.array(input_length)
-		Y_data = np.array(Y_data)
-		X_data = np.array(X_data).astype(
-			np.float32) / 255  # Normalize image data to [0,1], TODO: mean normalization over training data
 
 		inputs = {
-			'the_input': X_data,
-			'the_labels': Y_data,
+			'input'       : X_data,
+			'labels'      : Y_data,
 			'input_length': input_length,
 			'label_length': label_length,
-			'source_str': source_str  # used for visualization only
 		}
 
-		outputs = {'ctc': np.zeros([size])}  # dummy data for dummy loss function
+		outputs = { 'ctc': np.zeros([size]) } # dummy data for dummy loss function
 
 		return (inputs, outputs)
 
@@ -156,21 +148,16 @@ class BatchGenerator(Callback):
 			batch = self.read_dataset(val_index, self.minibatch_size, train=False)
 			yield batch
 
-	def get_align(self, _id: str) -> str:
-		return self.align_hash[_id]
-
-	def get_batch(self, index: int, size: int, training: bool = True) -> (dict, dict):
-		video_list = self.train_list if training else self.val_list
-
-		batch = self.read_dataset(index, self.minibatch_size, train=False)
-		yield batch
-
 	def on_train_begin(self, logs={}):
 		with self.cur_train_index.get_lock():
 			self.cur_train_index.value = 0
 
 		with self.cur_val_index.get_lock():
 			self.cur_val_index.value = 0
+
+	@property
+	def cache_path(self) -> str:
+		return self.data_path.rstrip('/') + '.cache'
 
 	@property
 	def training_size(self) -> int:
@@ -188,13 +175,12 @@ class BatchGenerator(Callback):
 	def default_validation_steps(self) -> int:
 		return self.validation_size / self.minibatch_size
 
-	def get_output_size(self):
-		return 28
 
 class Frames(object):
 	def get_data(self, path):
 		frames_path = sorted([os.path.join(path, x) for x in os.listdir(path)])
 		frames = [ndimage.imread(frame_path) for frame_path in frames_path]
+		
 		return self.set_data(frames)
 
 	def set_data(self, frames):
@@ -211,6 +197,7 @@ class Frames(object):
 		self.data = data_frames
 		self.length = frames_n
 		return self.data
+
 
 class Align(object):
 	def __init__(self, absolute_max_string_len=32):
@@ -256,7 +243,7 @@ class Align(object):
 
 if __name__ == '__main__':
 	generator = BatchGenerator(
-		dataset_path='path',
+		dataset_path='./data/dataset',
 		minibatch_size=50,
 		frame_count=30,
 		image_channels=3,

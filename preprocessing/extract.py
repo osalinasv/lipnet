@@ -3,7 +3,7 @@ import os
 import shutil
 
 from preprocessing.extractor.extract_roi_frames import video_to_frames
-from common.files import is_dir, get_files_in_dir, make_dir_if_not_exists
+from common.files import is_dir, is_file, get_files_in_dir, make_dir_if_not_exists
 
 
 def extract(videos_path: str, pattern: str, output_path: str, predictor_path: str, first_video: int, last_video: int):
@@ -12,17 +12,22 @@ def extract(videos_path: str, pattern: str, output_path: str, predictor_path: st
 	predictor_path = os.path.realpath(predictor_path)
 
 	print('\nEXTRACT\n')
-	print('Searching for files in: {}\nMatch for: {}'.format(videos_path, pattern))
+	print('Searching for files in: {}\nMatch for: {}\n'.format(videos_path, pattern))
 
-	# Read what videos already success
+	# Read what videos already succeeded
 	videos_already_made = []
-	f = open(os.path.join(output_path, "videos_success.txt"), "r+")
-	fLines = f.readlines()
-	for l in fLines:
-		videos_already_made.append(l.rstrip())  # remove line break
+	VIDEOS_SUCCESS_PATH = os.path.join(output_path, 'videos_success.txt')
 
-	last_group_dir = ""
+	if is_file(VIDEOS_SUCCESS_PATH):
+		f = open(os.path.join(output_path, "videos_success.txt"), "r+")
+		f_lines = f.readlines()
+
+		for l in f_lines:
+			videos_already_made.append(l.rstrip()) # remove line break
+
+	last_group_dir = ''
 	count_in_video = 0
+
 	for file_path in get_files_in_dir(videos_path, pattern):
 		group_dir = os.path.basename(os.path.dirname(file_path))
 		video_dir = os.path.splitext(os.path.basename(file_path))[0]
@@ -50,11 +55,14 @@ def extract(videos_path: str, pattern: str, output_path: str, predictor_path: st
 
 		if not video_to_frames(file_path, vid_cutouts_target_dir, predictor_path):
 			count_in_video -= 1
+
 			if count_in_video < 0:
 				count_in_video = 0
+
 			shutil.rmtree(vid_cutouts_target_dir)
 			f = open(os.path.join(output_path, "videos_fail.txt"), "a+")
 			f.write(video_full_dir + "\n")
+
 		else:
 			f = open(os.path.join(output_path, "videos_success.txt"), "a+")
 			f.write(video_full_dir + "\n")
@@ -78,7 +86,7 @@ def main():
 		help="(Optional) First video extracted in each speaker inclusive", type=int, default=0)
 
 	ap.add_argument("-lv", "--last-video",  required=False,
-		help="(Optional) Lasst video extracted in each speaker inclusive", type=int, default=1000)
+		help="(Optional) Lasst video extracted in each speaker inclusive", type=int, default=1001)
 
 	DEFAULT_PREDICTOR = os.path.join(__file__, '..', '..', 'data', 'predictors', 'shape_predictor_68_face_landmarks.dat')
 
