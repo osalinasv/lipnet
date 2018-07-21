@@ -1,7 +1,7 @@
+import argparse
 import os
-import sys
 
-from common.files import is_file
+from common.files import is_file, get_file_extension
 
 
 def predict(weights_file_path: str, video_file_path: str):
@@ -10,15 +10,28 @@ def predict(weights_file_path: str, video_file_path: str):
 
 
 def main():
-	if len(sys.argv) != 2:
-		print('\nUsage:\n$ python predict.py <path_to_weights> <path_to_video>')
+	ap = argparse.ArgumentParser()
+
+	ap.add_argument('-v', '--video-path', required=True,
+		help='Path to video file to analize')
+
+	ap.add_argument('-w', '--weights-path', required=True,
+		help='Path to .hdf5 trained weights file')
+
+	args = vars(ap.parse_args())
+
+	weights = os.path.realpath(args['weights_path'])
+	video = os.path.realpath(args['video_path'])
+
+	if not is_file(weights) or get_file_extension(weights) != '.hdf5':
+		print('Invalid path to trained weights file')
 		return
 
-	weights = os.path.realpath(sys.argv[1])
-	video = os.path.realpath(sys.argv[2])
-
-	if is_file(weights) and is_file(video):
-		predict(weights, video)
+	if not is_file(video):
+		print('Invalid path to video file')
+		return
+	
+	predict(weights, video)
 
 
 if __name__ == '__main__':

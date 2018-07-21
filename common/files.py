@@ -1,12 +1,17 @@
 import os
 import fnmatch
 
+
 def is_dir(path: str) -> bool:
-	return os.path.exists(path) and os.path.isdir(path)
+	return isinstance(path, str) and os.path.exists(path) and os.path.isdir(path)
 
 
 def is_file(path: str) -> bool:
-	return os.path.exists(path) and os.path.isfile(path)
+	return isinstance(path, str) and os.path.exists(path) and os.path.isfile(path)
+
+
+def get_file_extension(path: str) -> str:
+	return os.path.splitext(path)[1]
 
 
 def make_dir_if_not_exists(path: str):

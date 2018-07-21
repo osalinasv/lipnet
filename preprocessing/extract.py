@@ -1,34 +1,12 @@
-import fnmatch
-import os
-import sys
-import shutil
 import argparse
+import os
+import shutil
 
 from preprocessing.extractor.extract_roi_frames import video_to_frames
-from common.files import make_dir_if_not_exists, get_files_in_dir
+from common.files import is_dir, get_files_in_dir, make_dir_if_not_exists
 
 
 def extract(videos_path: str, pattern: str, output_path: str, predictor_path: str, first_video: int, last_video: int):
-	"""
-	Extracts the frames in all videos inside videos_path that match pattern
-
-	Usage:
-		python extract.py [videos_path] [pattern] [output_path]
-
-		videos_path         Path to videos directory
-		pattern             Filename pattern to match
-		output_path         Path for the extracted frames
-
-	Example:
-		python extract.py data/dataset *.mpg data/target data/predictors/shape_predictor_68_face_landmarks.dat
-
-	:param videos_path:
-	:param pattern:
-	:param output_path:
-	:param predictor_path:
-	:return:
-	"""
-
 	videos_path = os.path.realpath(videos_path)
 	output_path = os.path.realpath(output_path)
 	predictor_path = os.path.realpath(predictor_path)
@@ -84,47 +62,48 @@ def extract(videos_path: str, pattern: str, output_path: str, predictor_path: st
 	print('Finished extraction successfully\n')
 
 
-if __name__ == '__main__':
-	'''
-		extract.py
-			Extracts the frames in all videos inside videos_path that match pattern
-
-		Usage:
-			python extract.py [videos_path] [pattern] [output_path] [predictor_path]
-
-			videos_path         Path to videos directory
-			pattern             (Optional) Filename pattern to match
-			output_path         Path for the extracted frames
-			from_video          (Optional) First video extracted in each speaker inclusive
-			to_video            (Optional) Last video extracted in each speaker inclusive
-			predictor_path      (Optional) Path to the predictor .dat file
-
-		Example:
-			python extract.py -v data/dataset -p *.mpg -o data/target -fv 0 -lv 1000 -pp data/predictors/shape_predictor_68_face_landmarks.dat
-
-	'''
-
-	# construct the argument parser and parse the arguments
+def main():
 	ap = argparse.ArgumentParser()
-	ap.add_argument("-v", "--videos-path", required=True, help="Path to videos directory")
-	ap.add_argument("-p", "--pattern", required=False, help="(Optional) Filename pattern to match", default='*.mpg')
-	ap.add_argument("-o", "--outputh-path", required=True, help="Path for the extracted frames")
-	ap.add_argument("-fv", "--first-video", required=False, help="(Optional) First video extracted in each speaker inclusive", type=int, default=0)
-	ap.add_argument("-lv", "--last-video", required=False, help="(Optional) Lasst video extracted in each speaker inclusive", type=int, default=1000)
-	ap.add_argument("-pp", "--predictor-path", required=False, help="(Optional) Path to the predictor .dat file", default=os.path.join(__file__, '..', '..', 'data', 'predictors', 'shape_predictor_68_face_landmarks.dat'))
+
+	ap.add_argument("-v",  "--videos-path", required=True,
+		help="Path to videos directory")
+
+	ap.add_argument("-o",  "--output-path", required=True, 
+		help="Path for the extracted frames")
+
+	ap.add_argument("-p",  "--pattern", required=False,
+		help="(Optional) File name pattern to match", default='*.mpg')
+
+	ap.add_argument("-fv", "--first-video", required=False,
+		help="(Optional) First video extracted in each speaker inclusive", type=int, default=0)
+
+	ap.add_argument("-lv", "--last-video",  required=False,
+		help="(Optional) Lasst video extracted in each speaker inclusive", type=int, default=1000)
+
+	DEFAULT_PREDICTOR = os.path.join(__file__, '..', '..', 'data', 'predictors', 'shape_predictor_68_face_landmarks.dat')
+
+	ap.add_argument("-pp", "--predictor-path", required=False,
+		help="(Optional) Path to the predictor .dat file", default=DEFAULT_PREDICTOR)
 
 	args = vars(ap.parse_args())
 
-	i_path = args["videos_path"]
-	o_path = args["outputh_path"]
-	pat = args["pattern"]
+	videos_path = args["videos_path"]
+	output_path = args["output_path"]
+	pattern = args["pattern"]
 	first_video = args["first_video"]
 	last_video = args["last_video"]
-	p_path = args["predictor_path"]
+	predictor_path = args["predictor_path"]
 
-	if i_path is None or o_path is None:
-		print('Both input and output are required\n')
-		exit()
+	if not is_dir(videos_path):
+		print('Invalid path to videos directory')
+		return
 
-	extract(i_path, pat, o_path, p_path,
-			first_video=first_video, last_video=last_video)
+	if not isinstance(output_path, str):
+		print('Invalid path to output directory')
+		return
+
+	extract(videos_path, pattern, output_path, predictor_path, first_video, last_video)
+
+
+if __name__ == '__main__':
+	main()

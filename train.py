@@ -1,3 +1,4 @@
+import argparse
 import datetime
 import os
 
@@ -42,8 +43,17 @@ def train(run_name: str, epochs: int, frame_count: int, image_channels: int, ima
 
 
 def main():
+	ap = argparse.ArgumentParser()
+
+	ap.add_argument('-e', '--epochs', required=False,
+		help='(Optional) Number of epochs to run', type=int, default=5000)
+
+	args = vars(ap.parse_args())
+
+	epochs = args['epochs']
+
 	name = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-	train(name, 5000, 75, 3, 50, 100, 32)
+	train(name, epochs, 75, 3, 50, 100, 32)
 
 
 if __name__ == '__main__':
