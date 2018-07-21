@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-	name             = 'Lipnet',
+	name             = 'lipnext',
 	version          = '0.1',
 	license          = 'Apache License, Version 2.0',
 	long_description = open('README.md').read(),

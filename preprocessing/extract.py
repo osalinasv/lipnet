@@ -5,7 +5,7 @@ import shutil
 import argparse
 
 from preprocessing.extractor.extract_roi_frames import video_to_frames
-from common.files import make_dir, find_files
+from common.files import make_dir_if_not_exists, get_files_in_dir
 
 
 def extract(videos_path: str, pattern: str, output_path: str, predictor_path: str, first_video: int, last_video: int):
@@ -45,7 +45,7 @@ def extract(videos_path: str, pattern: str, output_path: str, predictor_path: st
 
 	last_group_dir = ""
 	count_in_video = 0
-	for file_path in find_files(videos_path, pattern):
+	for file_path in get_files_in_dir(videos_path, pattern):
 		group_dir = os.path.basename(os.path.dirname(file_path))
 		video_dir = os.path.splitext(os.path.basename(file_path))[0]
 
@@ -68,7 +68,7 @@ def extract(videos_path: str, pattern: str, output_path: str, predictor_path: st
 			print("Video was previously extracted " + video_full_dir + "\n")
 			continue
 
-		make_dir(vid_cutouts_target_dir)
+		make_dir_if_not_exists(vid_cutouts_target_dir)
 
 		if not video_to_frames(file_path, vid_cutouts_target_dir, predictor_path):
 			count_in_video -= 1

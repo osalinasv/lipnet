@@ -2,7 +2,7 @@ import numpy as np
 import sys
 import os
 
-from common.files import find_files, make_dir
+from common.files import get_files_in_dir, make_dir_if_not_exists
 from keras.preprocessing.image import ImageDataGenerator, img_to_array, load_img, array_to_img
 
 IMAGE_HEIGHT = 50
@@ -55,7 +55,7 @@ if __name__ == '__main__':
 	standardize_files = []
 
 	old_standardize_dir = ""
-	for file_path in find_files(i_path, pat):
+	for file_path in get_files_in_dir(i_path, pat):
 		# save the path from train image
 
 		train_files.append(file_path)
@@ -65,7 +65,7 @@ if __name__ == '__main__':
 		# make dir for standadize images
 		current_standardize_dir = os.path.dirname(os.path.abspath(output_standardize_file_path))
 		if current_standardize_dir != old_standardize_dir:
-			make_dir(current_standardize_dir)
+			make_dir_if_not_exists(current_standardize_dir)
 		old_standardize_dir = current_standardize_dir
 
 		standardize_files.append(output_standardize_file_path)

@@ -3,7 +3,7 @@ import shutil
 import sys
 
 sys.path.append("..")
-from common.files import make_dir, walklevel
+from common.files import make_dir_if_not_exists, walklevel
 import argparse
 
 
@@ -29,9 +29,9 @@ def generate_train_val(mouths_path, destination_path, all_aligments_path, train_
     val_path = os.path.join(destination_path, "val")
     align_path = os.path.join(destination_path, "align")
 
-    make_dir(trainig_path)
-    make_dir(val_path)
-    make_dir(align_path)
+    make_dir_if_not_exists(trainig_path)
+    make_dir_if_not_exists(val_path)
+    make_dir_if_not_exists(align_path)
 
     for subdir, _, _ in walklevel(mouths_path):
         train_count = 0

@@ -1,4 +1,4 @@
-import layers
+import lipnext.model.layers as layers
 
 from keras import backend as k
 from keras.models import Model
@@ -59,7 +59,7 @@ def compile_model(model: Model, optimizer = None):
 	if optimizer == None:
 		optimizer = Adam(lr=ADAM_LEARN_RATE, beta_1=ADAM_F_MOMENTUM, beta_2=ADAM_S_MOMENTUM, epsilon=ADAM_STABILITY)
 
-	model.compile(loss={'ctc': lambda y_true, y_pred: y_pred}, optimizer=optimizer)
+	model.compile(loss={'ctc': lambda y_true, y_pred: y_pred}, optimizer=optimizer, metrics=['acc'])
 
 
 def get_input_shape(frame_count: int, image_channels: int, image_height: int, image_width: int) -> tuple:
