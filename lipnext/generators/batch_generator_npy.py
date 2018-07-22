@@ -100,7 +100,7 @@ class BatchGenerator(Callback):
 			label_length.append(align.label_length)
 			input_length.append(len(video_data))
 
-		X_data = np.array(X_data) # TODO: @Error this returns a np array with shape (50,) instead of the needed 5D input shape
+		X_data = np.array(X_data) # TODO: This returns an ndarray with shape (50,) instead of the needed 5D input shape
 		Y_data = np.array(Y_data)
 		label_length = np.array(label_length)
 		input_length = np.array(input_length)
@@ -128,13 +128,13 @@ class BatchGenerator(Callback):
 
 
 	def get_video_data_from_file(self, path: str):
-		video_data = np.load(path).astype(np.float32) / 255 # T x H x W x C
+		video_data = np.load(path) # T x H x W x C
 		reshaped_video_data = [self.reshape_video_frame(frame) for frame in video_data] # T x W x H x C
 
 		if K.image_data_format() == 'channels_first':
 			reshaped_video_data = np.rollaxis(reshaped_video_data, 3) # C x T x W x H
 
-		return np.array(reshaped_video_data)
+		return np.array(reshaped_video_data).astype(np.float32) / 255
 
 
 	@staticmethod
@@ -144,7 +144,7 @@ class BatchGenerator(Callback):
 		if len(frame.shape) < 3:
 			frame = np.array([frame]).swapaxes(0, 2).swapaxes(0, 1)  # Add grayscale channel
 
-		return np.array(frame)
+		return frame
 
 
 	@threadsafe_generator
