@@ -1,49 +1,51 @@
-# TODO: remove this file
-
-import os
 import cv2
 import dlib
 import numpy as np
+import os
 import skvideo.io
 
 from imutils import face_utils
 from progress.bar import ShadyBar
 from scipy.misc import imresize
-from skimage import io
+
 
 MOUTH_WIDTH = 100
 MOUTH_HEIGHT = 50
 HORIZONTAL_PAD = 0.10
 
 
-def video_to_frames(file_path: str, output_dir: str, predictor_path: str):
-	""""
-	:return
-		false in case no mouth is detected in a frame
-		true if everything is rigth
-	"""
-	video_object = skvideo.io.vread(file_path)
-	frames = np.array([frame for frame in video_object])
+def video_to_frames(video_path: str, output_path: str, predictor_path: str) -> bool:
+	video_path     = os.path.realpath(video_path)
+	output_path    = os.path.realpath(output_path)
+	predictor_path = os.path.realpath(predictor_path)
 
-	print('\nProcessing: {}'.format(file_path))
-	suffix = '%(percent)d%% [%(elapsed_td)s]'
-	bar = ShadyBar(os.path.basename(file_path), max=len(frames), suffix=suffix)
+	print('\nProcessing: {}'.format(video_path))
 
-	for i, frame in enumerate(frames):
-		filename = '{:05}.jpg'.format(i + 1)
-		output_cutout_file_path = os.path.join(output_dir, filename)
+	frames_array = skvideo.io.vread(video_path)
+	mouth_frames_array = []
 
-		mouth = extract_mouth(frame, predictor_path)
-		if mouth is None:
+	# Progress bar
+	bar = ShadyBar(os.path.basename(video_path), max=len(frames_array), suffix='%(percent)d%% [%(elapsed_td)s]')
+
+	for frame in frames_array:
+		mouth_frame = extract_mouth(frame, predictor_path)
+
+		if mouth_frame is None:
 			return False
-		io.imsave(output_cutout_file_path, mouth)
+
+		mouth_frames_array.append(mouth_frame)
 		bar.next()
+	
+	mouth_frames_array = np.array(mouth_frames_array)
+	np.save(output_path, mouth_frames_array)
+
 	bar.finish()
+
 	return True
 
 
 def extract_mouth(frame, predictor_path: str):
-	detector = dlib.get_frontal_face_detector()
+	detector  = dlib.get_frontal_face_detector()
 	predictor = dlib.shape_predictor(predictor_path)
 
 	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -83,14 +85,16 @@ def crop_mouth_region(np_mouth_points, frame):
 	mouth_t = int(mouth_centroid_norm[1] - MOUTH_HEIGHT / 2)
 	mouth_b = int(mouth_centroid_norm[1] + MOUTH_HEIGHT / 2)
 
-	# This is wrong is still making the
 	diff_width = mouth_r - mouth_l
+
 	if diff_width > MOUTH_WIDTH:
 		mouth_r += MOUTH_WIDTH - diff_width
 
 	diff_height = mouth_b - mouth_t
+
 	if diff_height > MOUTH_HEIGHT:
 		mouth_b += MOUTH_HEIGHT - diff_height
 
 	mouth_crop_image = resized_img[mouth_t:mouth_b, mouth_l:mouth_r]
+
 	return mouth_crop_image

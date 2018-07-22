@@ -4,11 +4,12 @@ import os
 import pickle
 import sys
 
+from common.files import is_file, get_file_name, get_files_in_dir
+from lipnext.helpers.threadsafe import threadsafe_generator
+from lipnext.helpers.align import Align
 from keras import backend as K
 from keras.callbacks import Callback
 from scipy import ndimage
-from common.files import is_file, read_subfolders
-from lipnext.helpers.threadsafe import threadsafe_generator
 
 
 class BatchGenerator(Callback):
@@ -43,35 +44,43 @@ class BatchGenerator(Callback):
 
 		self.build_dataset()
 
+
 	def build_dataset(self):
 		cache_path = self.cache_path
 
 		if is_file(cache_path):
-			print('\nLoading dataset list from cache...')
+			print('\nLoading dataset list from cache...\n')
 
-			with open (cache_path, 'rb') as fp:
-				self.train_list, self.val_list, self.align_hash = pickle.load(fp)
+			with open(cache_path, 'rb') as f:
+				self.train_list, self.val_list, self.align_hash = pickle.load(f)
 
 		else:
-			print('\nEnumerating dataset list from disk...')
+			print('\nEnumerating dataset list from disk...\n')
 
-			self.train_list = read_subfolders(self.train_path)
-			self.val_list   = read_subfolders(self.val_path)
-			self.align_hash = self.enumerate_align_hash(self.train_list + self.val_list)
+			self.train_list = self.get_numpy_files_in_dir(self.train_path)
+			self.val_list   = self.get_numpy_files_in_dir(self.val_path)
+			self.align_hash = self.generate_align_hash(self.train_list + self.val_list)
 
-			with open(cache_path, 'wb') as fp:
-				pickle.dump((self.train_list, self.val_list, self.align_hash), fp)
+			with open(cache_path, 'wb') as f:
+				pickle.dump((self.train_list, self.val_list, self.align_hash), f)
 
-	def enumerate_align_hash(self, video_list: list) -> dict:
+
+	@staticmethod
+	def get_numpy_files_in_dir(path: str) -> list:
+		return [f for f in get_files_in_dir(path, '*.npy')]
+
+
+	def generate_align_hash(self, video_list: list) -> dict:
 		align_hash = {}
 
 		for video_path in video_list:
-			video_id   = os.path.splitext(video_path)[0].split('\\')[-1]
-			align_path = os.path.join(self.align_path, video_id) + '.align'
+			video_name = get_file_name(video_path)
+			align_path = os.path.join(self.align_path, video_name) + '.align'
 
-			align_hash[video_id] = Align(self.max_string).from_file(align_path)
+			align_hash[video_name] = Align(self.max_string).from_file(align_path)
 
 		return align_hash
+
 
 	def read_dataset(self, index: int, size: int, train: bool) -> (dict, dict):
 		video_list  = self.train_list if train else self.val_list
@@ -83,15 +92,15 @@ class BatchGenerator(Callback):
 		input_length = []
 
 		for path in X_data_path:
-			frames = Frames()
-			align  = self.align_hash[path.split('\\')[-1]]
+			video_data = self.get_video_data_from_file(path)
+			align      = self.align_hash[get_file_name(path)]
 
-			X_data.append(frames.get_data(path))
+			X_data.append(video_data)
 			Y_data.append(align.padded_label)
 			label_length.append(align.label_length)
-			input_length.append(frames.length)
+			input_length.append(len(video_data))
 
-		X_data = np.array(X_data).astype(np.float32) / 255
+		X_data = np.array(X_data) # TODO: @Error this returns a np array with shape (50,) instead of the needed 5D input shape
 		Y_data = np.array(Y_data)
 		label_length = np.array(label_length)
 		input_length = np.array(input_length)
@@ -107,11 +116,36 @@ class BatchGenerator(Callback):
 
 		return (inputs, outputs)
 
-	def get_sublist(self, l, index, size):
+
+	@staticmethod
+	def get_sublist(l: list, index: int, size: int) -> list:
 		ret = l[index:index + size]
+
 		while size - len(ret) > 0:
 			ret += l[0:size - len(ret)]
+
 		return ret
+
+
+	def get_video_data_from_file(self, path: str):
+		video_data = np.load(path).astype(np.float32) / 255 # T x H x W x C
+		reshaped_video_data = [self.reshape_video_frame(frame) for frame in video_data] # T x W x H x C
+
+		if K.image_data_format() == 'channels_first':
+			reshaped_video_data = np.rollaxis(reshaped_video_data, 3) # C x T x W x H
+
+		return np.array(reshaped_video_data)
+
+
+	@staticmethod
+	def reshape_video_frame(frame):
+		frame = frame.swapaxes(0, 1) # swap width and height to form format W x H x C
+
+		if len(frame.shape) < 3:
+			frame = np.array([frame]).swapaxes(0, 2).swapaxes(0, 1)  # Add grayscale channel
+
+		return np.array(frame)
+
 
 	@threadsafe_generator
 	def train_generator(self):
@@ -132,8 +166,8 @@ class BatchGenerator(Callback):
 				if self.cur_train_index.value >= self.training_size:
 					self.cur_train_index.value = self.cur_train_index.value % self.minibatch_size
 
-			batch = self.read_dataset(train_index, self.minibatch_size, train=True)
-			yield batch
+			yield self.read_dataset(train_index, self.minibatch_size, train=True)
+
 
 	@threadsafe_generator
 	def val_generator(self):
@@ -145,115 +179,60 @@ class BatchGenerator(Callback):
 				if self.cur_val_index.value >= self.validation_size:
 					self.cur_val_index.value = self.cur_val_index.value % self.minibatch_size
 
-			batch = self.read_dataset(val_index, self.minibatch_size, train=False)
-			yield batch
+			yield self.read_dataset(val_index, self.minibatch_size, train=False)
 
-	def on_train_begin(self, logs={}):
+
+	def on_train_begin(self, logs={ }):
 		with self.cur_train_index.get_lock():
 			self.cur_train_index.value = 0
 
 		with self.cur_val_index.get_lock():
 			self.cur_val_index.value = 0
 
+
 	@property
 	def cache_path(self) -> str:
 		return self.data_path.rstrip('/') + '.cache'
+
 
 	@property
 	def training_size(self) -> int:
 		return len(self.train_list)
 
+
 	@property
 	def default_training_steps(self) -> int:
 		return self.training_size / self.minibatch_size
 
+
 	@property
 	def validation_size(self) -> int:
 		return len(self.val_list)
+
 
 	@property
 	def default_validation_steps(self) -> int:
 		return self.validation_size / self.minibatch_size
 
 
-class Frames(object):
-	def get_data(self, path):
-		frames_path = sorted([os.path.join(path, x) for x in os.listdir(path)])
-		frames = [ndimage.imread(frame_path) for frame_path in frames_path]
-		
-		return self.set_data(frames)
-
-	def set_data(self, frames):
-		data_frames = []
-		for frame in frames:
-			frame = frame.swapaxes(0, 1)  # swap width and height to form format W x H x C
-			if len(frame.shape) < 3:
-				frame = np.array([frame]).swapaxes(0, 2).swapaxes(0, 1)  # Add grayscale channel
-			data_frames.append(frame)
-		frames_n = len(data_frames)
-		data_frames = np.array(data_frames)  # T x W x H x C
-		if K.image_data_format() == 'channels_first':
-			data_frames = np.rollaxis(data_frames, 3)  # C x T x W x H
-		self.data = data_frames
-		self.length = frames_n
-		return self.data
-
-
-class Align(object):
-	def __init__(self, absolute_max_string_len=32):
-		self.absolute_max_string_len = absolute_max_string_len
-
-	def from_file(self, path):
-		with open(path, 'r') as f:
-			lines = f.readlines()
-		align = [(int(y[0])/1000, int(y[1])/1000, y[2]) for y in [x.strip().split(" ") for x in lines]]
-		self.build(align)
-		return self
-
-	def build(self, align):
-		self.align = self.strip(align, ['sp','sil'])
-		self.sentence = self.get_sentence(align)
-		self.label = self.get_label(self.sentence)
-		self.padded_label = self.get_padded_label(self.label)
-
-	def strip(self, align, items):
-		return [sub for sub in align if sub[2] not in items]
-
-	def get_sentence(self, align):
-		return " ".join([y[-1] for y in align if y[-1] not in ['sp', 'sil']])
-
-	def get_label(self, sentence):
-		ret = []
-		for char in sentence:
-			if char >= 'a' and char <= 'z':
-				ret.append(ord(char) - ord('a'))
-			elif char == ' ':
-				ret.append(26)
-		return ret
-
-	# Returns an array that is of size absolute_max_string_len. Fills the left spaces with -1 in case the len(label) is less than absolute_max_string_len.
-	def get_padded_label(self, label):
-		padding = np.ones((self.absolute_max_string_len-len(label))) * -1
-		return np.concatenate((np.array(label), padding), axis=0)
-
-	@property
-	def label_length(self):
-		return len(self.label)
-
-
 if __name__ == '__main__':
 	generator = BatchGenerator(
-		dataset_path='./data/ordered',
-		minibatch_size=50,
-		frame_count=75,
-		image_channels=3,
-		image_height=50,
-		image_width=100,
-		max_string=32
+		dataset_path   = './data/ordered',
+		minibatch_size = 50,
+		frame_count    = 75,
+		image_channels = 3,
+		image_height   = 50,
+		image_width    = 100,
+		max_string     = 32
 	)
 
 	for idx, res in enumerate(generator.train_generator()):
-		if idx >= 10:
-			break
+		if idx > 2: break
 
-		print(res)
+		i, _ = res
+
+		print('input:        {}'.format(i['input'].shape))
+		print('input inner:  {}'.format(i['input'][0].shape))
+		print('labels:       {}'.format(i['labels'].shape))
+		print('input_length: {}'.format(i['input_length']))
+		print('label_length: {}'.format(i['label_length']))

@@ -1,3 +1,5 @@
+# TODO: make a version that works with the new .npy files and then remove this file
+
 import numpy as np
 import sys
 import os

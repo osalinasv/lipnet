@@ -14,6 +14,10 @@ def get_file_extension(path: str) -> str:
 	return os.path.splitext(path)[1]
 
 
+def get_file_name(path: str) -> str:
+	return os.path.splitext(os.path.basename(path))[0]
+
+
 def make_dir_if_not_exists(path: str):
 	if not is_dir(path): os.makedirs(path)
 
