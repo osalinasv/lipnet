@@ -1,75 +1,73 @@
-# TODO: remove this file
-
 import argparse
+import dlib
+import numpy as np
 import os
-import shutil
 
-from preprocessing.extractor.extract_roi_frames import video_to_frames
 from common.files import is_dir, is_file, get_files_in_dir, make_dir_if_not_exists
+from preprocessing.extractor.extract_roi import video_to_frames
 
 
-def extract(videos_path: str, pattern: str, output_path: str, predictor_path: str, first_video: int, last_video: int):
+# python preprocessing\extract.py -v D:\GRID\ -o data\dataset -p bbaf*.mpg
+def extract_to_npy(videos_path: str, output_path: str, predictor_path: str, pattern: str, first_video: int, last_video: int):
 	videos_path = os.path.realpath(videos_path)
 	output_path = os.path.realpath(output_path)
 	predictor_path = os.path.realpath(predictor_path)
 
 	print('\nEXTRACT\n')
-	print('Searching for files in: {}\nMatch for: {}\n'.format(videos_path, pattern))
+	print('Searching for files in: {}\nMatch for: {}'.format(videos_path, pattern))
 
-	# Read what videos already succeeded
-	videos_already_made = []
-	VIDEOS_SUCCESS_PATH = os.path.join(output_path, 'videos_success.txt')
+	videos_failed = []
 
-	if is_file(VIDEOS_SUCCESS_PATH):
-		f = open(os.path.join(output_path, "videos_success.txt"), "r+")
-		f_lines = f.readlines()
+	VIDEOS_FAILED_PATH  = os.path.join(output_path, 'videos_failed.log')
 
-		for l in f_lines:
-			videos_already_made.append(l.rstrip()) # remove line break
+	if is_file(VIDEOS_FAILED_PATH):
+		with open(VIDEOS_FAILED_PATH, 'r+') as f:
+			for line in f.readlines():
+				videos_failed.append(line.rstrip())
 
-	last_group_dir = ''
-	count_in_video = 0
+	last_group_dir_name = ''
+	video_count_per_group = 0
+
+	detector  = dlib.get_frontal_face_detector()
+	predictor = dlib.shape_predictor(predictor_path)
 
 	for file_path in get_files_in_dir(videos_path, pattern):
-		group_dir = os.path.basename(os.path.dirname(file_path))
-		video_dir = os.path.splitext(os.path.basename(file_path))[0]
+		group_dir_name = os.path.basename(os.path.dirname(file_path))
+		video_file_name = os.path.splitext(os.path.basename(file_path))[0]
 
-		if group_dir == last_group_dir:
-			count_in_video += 1
-		else:
-			count_in_video = 0
+		video_target_dir  = os.path.join(output_path, group_dir_name)
+		video_target_path = os.path.join(video_target_dir, video_file_name) + '.npy'
 
-		last_group_dir = group_dir
-
-		if count_in_video > last_video or count_in_video < first_video:
+		if video_target_path in videos_failed:
+			print('Video {} is probably corrupted and was ignored'.format(video_file_name))
 			continue
 
-		video_full_dir = os.path.join(group_dir, video_dir)
+		if group_dir_name == last_group_dir_name:
+			video_count_per_group += 1
+		else:
+			video_count_per_group = 0
 
-		vid_cutouts_target_dir = os.path.join(output_path, video_full_dir)
+		last_group_dir_name = group_dir_name
 
-		# if the video is already made the
-		if video_full_dir in videos_already_made:
-			print("Video was previously extracted " + video_full_dir + "\n")
+		if video_count_per_group < first_video or video_count_per_group >= last_video:
 			continue
 
-		make_dir_if_not_exists(vid_cutouts_target_dir)
+		if is_file(video_target_path):
+			print('Video {} is already at: {}'.format(video_file_name, video_target_path))
+			continue
 
-		if not video_to_frames(file_path, vid_cutouts_target_dir, predictor_path):
-			count_in_video -= 1
+		make_dir_if_not_exists(video_target_dir)
 
-			if count_in_video < 0:
-				count_in_video = 0
+		if not video_to_frames(file_path, video_target_path, detector, predictor):
+			if video_count_per_group > 0:
+				video_count_per_group -= 1
+			else:
+				video_count_per_group = 0
 
-			shutil.rmtree(vid_cutouts_target_dir)
-			f = open(os.path.join(output_path, "videos_fail.txt"), "a+")
-			f.write(video_full_dir + "\n")
+			with open(VIDEOS_FAILED_PATH, 'a+') as f:
+				f.write(video_target_path + '\n')
 
-		else:
-			f = open(os.path.join(output_path, "videos_success.txt"), "a+")
-			f.write(video_full_dir + "\n")
-
-	print('Finished extraction successfully\n')
+	print('\nExtraction finished')
 
 
 def main():
@@ -81,27 +79,27 @@ def main():
 	ap.add_argument("-o",  "--output-path", required=True, 
 		help="Path for the extracted frames")
 
-	ap.add_argument("-p",  "--pattern", required=False,
-		help="(Optional) File name pattern to match", default='*.mpg')
-
-	ap.add_argument("-fv", "--first-video", required=False,
-		help="(Optional) First video extracted in each speaker inclusive", type=int, default=0)
-
-	ap.add_argument("-lv", "--last-video",  required=False,
-		help="(Optional) Lasst video extracted in each speaker inclusive", type=int, default=1001)
-
 	DEFAULT_PREDICTOR = os.path.join(__file__, '..', '..', 'data', 'predictors', 'shape_predictor_68_face_landmarks.dat')
 
 	ap.add_argument("-pp", "--predictor-path", required=False,
 		help="(Optional) Path to the predictor .dat file", default=DEFAULT_PREDICTOR)
 
+	ap.add_argument("-p",  "--pattern", required=False,
+		help="(Optional) File name pattern to match", default='*.mpg')
+
+	ap.add_argument("-fv", "--first-video", required=False,
+		help="(Optional) First video index extracted in each speaker (inclusive)", type=int, default=0)
+
+	ap.add_argument("-lv", "--last-video",  required=False,
+		help="(Optional) Last video index extracted in each speaker (exclusive)", type=int, default=1001)
+
 	args = vars(ap.parse_args())
 
-	videos_path = args["videos_path"]
-	output_path = args["output_path"]
-	pattern = args["pattern"]
-	first_video = args["first_video"]
-	last_video = args["last_video"]
+	videos_path    = args["videos_path"]
+	output_path    = args["output_path"]
+	pattern        = args["pattern"]
+	first_video    = args["first_video"]
+	last_video     = args["last_video"]
 	predictor_path = args["predictor_path"]
 
 	if not is_dir(videos_path):
@@ -112,7 +110,7 @@ def main():
 		print('Invalid path to output directory')
 		return
 
-	extract(videos_path, pattern, output_path, predictor_path, first_video, last_video)
+	extract_to_npy(videos_path, output_path, predictor_path, pattern, first_video, last_video)
 
 
 if __name__ == '__main__':

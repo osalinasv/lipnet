@@ -9,26 +9,30 @@ from progress.bar import ShadyBar
 from scipy.misc import imresize
 
 
-MOUTH_WIDTH = 100
-MOUTH_HEIGHT = 50
+FRAME_COUNT    = 75
+MOUTH_WIDTH    = 100
+MOUTH_HEIGHT   = 50
 HORIZONTAL_PAD = 0.10
 
 
-def video_to_frames(video_path: str, output_path: str, predictor_path: str) -> bool:
-	video_path     = os.path.realpath(video_path)
-	output_path    = os.path.realpath(output_path)
-	predictor_path = os.path.realpath(predictor_path)
+def video_to_frames(video_path: str, output_path: str, detector, predictor) -> bool:
+	video_path  = os.path.realpath(video_path)
+	output_path = os.path.realpath(output_path)
 
 	print('\nProcessing: {}'.format(video_path))
 
 	frames_array = skvideo.io.vread(video_path)
+
+	if len(frames_array) != FRAME_COUNT:
+		return False
+
 	mouth_frames_array = []
 
 	# Progress bar
 	bar = ShadyBar(os.path.basename(video_path), max=len(frames_array), suffix='%(percent)d%% [%(elapsed_td)s]')
 
 	for frame in frames_array:
-		mouth_frame = extract_mouth(frame, predictor_path)
+		mouth_frame = extract_mouth(frame, detector, predictor)
 
 		if mouth_frame is None:
 			return False
@@ -44,10 +48,7 @@ def video_to_frames(video_path: str, output_path: str, predictor_path: str) -> b
 	return True
 
 
-def extract_mouth(frame, predictor_path: str):
-	detector  = dlib.get_frontal_face_detector()
-	predictor = dlib.shape_predictor(predictor_path)
-
+def extract_mouth(frame, detector, predictor):
 	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
 	for i, rect in enumerate(detector(gray, 1)):
@@ -66,17 +67,16 @@ def extract_mouth(frame, predictor_path: str):
 
 def crop_mouth_region(np_mouth_points, frame):
 	normalize_ratio = None
-
-	mouth_centroid = np.mean(np_mouth_points[:, -2:], axis=0)
+	mouth_centroid  = np.mean(np_mouth_points[:, -2:], axis=0)
 
 	if normalize_ratio is None:
-		mouth_left = np.min(np_mouth_points[:, :-1]) * (1.0 - HORIZONTAL_PAD)
+		mouth_left  = np.min(np_mouth_points[:, :-1]) * (1.0 - HORIZONTAL_PAD)
 		mouth_right = np.max(np_mouth_points[:, :-1]) * (1.0 + HORIZONTAL_PAD)
 
 		normalize_ratio = MOUTH_WIDTH / float(mouth_right - mouth_left)
 
 	new_img_shape = (int(frame.shape[0] * normalize_ratio), int(frame.shape[1] * normalize_ratio))
-	resized_img = imresize(frame, new_img_shape)
+	resized_img   = imresize(frame, new_img_shape)
 
 	mouth_centroid_norm = mouth_centroid * normalize_ratio
 
