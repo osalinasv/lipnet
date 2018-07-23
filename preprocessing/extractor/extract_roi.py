@@ -1,5 +1,6 @@
 import cv2
 import dlib
+import env
 import numpy as np
 import os
 import skvideo.io
@@ -8,12 +9,6 @@ from colorama import init, Back, Fore, Style
 from imutils import face_utils
 from progress.bar import ShadyBar
 from scipy.misc import imresize
-
-
-FRAME_COUNT    = 75
-MOUTH_WIDTH    = 100
-MOUTH_HEIGHT   = 50
-HORIZONTAL_PAD = 0.10
 
 
 init(autoreset=True)
@@ -27,7 +22,7 @@ def video_to_frames(video_path: str, output_path: str, detector, predictor) -> b
 
 	frames_array = skvideo.io.vread(video_path)
 
-	if len(frames_array) != FRAME_COUNT:
+	if len(frames_array) != env.FRAME_COUNT:
 		print(Back.RED + Fore.WHITE + 'Video {} does not match the frame count specified, skipping'.format(video_path))
 		return False
 
@@ -76,30 +71,30 @@ def crop_mouth_region(np_mouth_points, frame):
 	mouth_centroid  = np.mean(np_mouth_points[:, -2:], axis=0)
 
 	if normalize_ratio is None:
-		mouth_left  = np.min(np_mouth_points[:, :-1]) * (1.0 - HORIZONTAL_PAD)
-		mouth_right = np.max(np_mouth_points[:, :-1]) * (1.0 + HORIZONTAL_PAD)
+		mouth_left  = np.min(np_mouth_points[:, :-1]) * (1.0 - env.HORIZONTAL_PAD)
+		mouth_right = np.max(np_mouth_points[:, :-1]) * (1.0 + env.HORIZONTAL_PAD)
 
-		normalize_ratio = MOUTH_WIDTH / float(mouth_right - mouth_left)
+		normalize_ratio = env.IMAGE_WIDTH / float(mouth_right - mouth_left)
 
 	new_img_shape = (int(frame.shape[0] * normalize_ratio), int(frame.shape[1] * normalize_ratio))
 	resized_img   = imresize(frame, new_img_shape)
 
 	mouth_centroid_norm = mouth_centroid * normalize_ratio
 
-	mouth_l = int(mouth_centroid_norm[0] - MOUTH_WIDTH / 2)
-	mouth_r = int(mouth_centroid_norm[0] + MOUTH_WIDTH / 2)
-	mouth_t = int(mouth_centroid_norm[1] - MOUTH_HEIGHT / 2)
-	mouth_b = int(mouth_centroid_norm[1] + MOUTH_HEIGHT / 2)
+	mouth_l = int(mouth_centroid_norm[0] - env.IMAGE_WIDTH / 2)
+	mouth_r = int(mouth_centroid_norm[0] + env.IMAGE_WIDTH / 2)
+	mouth_t = int(mouth_centroid_norm[1] - env.IMAGE_HEIGHT / 2)
+	mouth_b = int(mouth_centroid_norm[1] + env.IMAGE_HEIGHT / 2)
 
 	diff_width = mouth_r - mouth_l
 
-	if diff_width > MOUTH_WIDTH:
-		mouth_r += MOUTH_WIDTH - diff_width
+	if diff_width > env.IMAGE_WIDTH:
+		mouth_r += env.IMAGE_WIDTH - diff_width
 
 	diff_height = mouth_b - mouth_t
 
-	if diff_height > MOUTH_HEIGHT:
-		mouth_b += MOUTH_HEIGHT - diff_height
+	if diff_height > env.IMAGE_HEIGHT:
+		mouth_b += env.IMAGE_HEIGHT - diff_height
 
 	mouth_crop_image = resized_img[mouth_t:mouth_b, mouth_l:mouth_r]
 

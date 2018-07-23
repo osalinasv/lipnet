@@ -3,7 +3,7 @@ import numpy as np
 
 class Align(object):
 
-	def __init__(self, absolute_max_string_len: int = 32):
+	def __init__(self, absolute_max_string_len: int):
 		self.absolute_max_string_len = absolute_max_string_len
 
 

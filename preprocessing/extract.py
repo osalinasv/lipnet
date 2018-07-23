@@ -101,7 +101,7 @@ def main():
 		help="(Optional) First video index extracted in each speaker (inclusive)", type=int, default=0)
 
 	ap.add_argument("-lv", "--last-video",  required=False,
-		help="(Optional) Last video index extracted in each speaker (exclusive)", type=int, default=1001)
+		help="(Optional) Last video index extracted in each speaker (exclusive)", type=int, default=1000)
 
 	args = vars(ap.parse_args())
 

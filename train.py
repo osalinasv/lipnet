@@ -1,5 +1,6 @@
 import argparse
 import datetime
+import env
 import os
 
 from common.files import make_dir_if_not_exists
@@ -13,7 +14,7 @@ OUTPUT_DIR      = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'results'))
 LOG_DIR         = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'logs'))
 
 
-def train(run_name: str, dataset_path: str, epochs: int, frame_count: int, image_channels: int, image_height: int, image_width: int, max_string: int, minibatch_size: int):
+def train(run_name: str, dataset_path: str, epochs: int, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int, minibatch_size: int):
 	from keras.callbacks import ModelCheckpoint, TensorBoard
 	from lipnext.model.v2 import create_model, compile_model
 
@@ -31,6 +32,8 @@ def train(run_name: str, dataset_path: str, epochs: int, frame_count: int, image
 
 	model = create_model(frame_count, image_channels, image_height, image_width, max_string)
 	compile_model(model)
+
+	# model.summary(line_length=119)
 
 	gen = BatchGenerator(
 		dataset_path   = dataset_path,
@@ -69,7 +72,7 @@ def main():
 	epochs = args['epochs']
 
 	name = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-	train(name, dataset_path, epochs, 75, 3, 50, 100, 32, 50)
+	train(name, dataset_path, epochs, env.FRAME_COUNT, env.IMAGE_WIDTH, env.IMAGE_HEIGHT, env.IMAGE_CHANNELS, env.MAX_STRING, env.MINIBATCH_SIZE)
 
 
 if __name__ == '__main__':

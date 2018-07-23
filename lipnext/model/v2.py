@@ -1,10 +1,10 @@
 import lipnext.model.layers as layers
+import env
 
 from keras import backend as k
 from keras.models import Model
 from keras.optimizers import Adam
 
-OUTPUT_SIZE = 28
 
 ADAM_LEARN_RATE = 0.0001
 ADAM_F_MOMENTUM = 0.9
@@ -12,7 +12,7 @@ ADAM_S_MOMENTUM = 0.999
 ADAM_STABILITY  = 1e-08
 
 
-def create_model(frame_count: int, image_channels: int, image_height: int, image_width: int, max_string: int, output_size: int = OUTPUT_SIZE) -> Model:
+def create_model(frame_count: int, image_channels: int, image_height: int, image_width: int, max_string: int, output_size: int = env.OUTPUT_SIZE) -> Model:
 	input_shape = get_input_shape(frame_count, image_channels, image_height, image_width)
 	input_layer = layers.create_input_layer('input', input_shape)
 
@@ -70,7 +70,7 @@ def get_input_shape(frame_count: int, image_channels: int, image_height: int, im
 
 
 if __name__ == '__main__':
-	model = create_model(frame_count=3, image_channels=3, image_height=50, image_width=100, max_string=32)
+	model = create_model(frame_count=75, image_channels=3, image_height=50, image_width=100, max_string=32)
 	model.summary()
 
 	compile_model(model)
