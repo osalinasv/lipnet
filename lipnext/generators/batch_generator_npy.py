@@ -39,10 +39,10 @@ class BatchGenerator(Callback):
 		self.train_list = []
 		self.align_hash = {}
 		
+		self.build_dataset()
+
 		self.steps_per_epoch  = self.default_training_steps if steps_per_epoch is None else steps_per_epoch
 		self.validation_steps = self.default_validation_steps if validation_steps is None else validation_steps
-
-		self.build_dataset()
 
 
 	def build_dataset(self):

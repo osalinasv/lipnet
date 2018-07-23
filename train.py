@@ -1,3 +1,6 @@
+import sys
+sys.path.append('.')
+
 import argparse
 import datetime
 import env
@@ -48,8 +51,8 @@ def train(run_name: str, dataset_path: str, epochs: int, frame_count: int, image
 	model.fit_generator(
 		generator        = gen.train_generator(),
 		validation_data  = gen.val_generator(),
-		steps_per_epoch  = gen.default_training_steps,
-		validation_steps = gen.default_validation_steps,
+		steps_per_epoch  = gen.steps_per_epoch,
+		validation_steps = gen.validation_steps,
 		epochs           = epochs,
 		verbose          = 1,
 		workers          = 2,

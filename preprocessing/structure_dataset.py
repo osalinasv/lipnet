@@ -1,3 +1,6 @@
+import sys
+sys.path.append('..')
+
 import argparse
 import math
 import os
