@@ -9,6 +9,7 @@ setup(
 	packages         = ['lipnext', 'preprocessing', 'evaluation', 'training'],
 	zip_safe         = False,
 	install_requires = [
+		'colorama==0.3.9',
 		'dlib==19.8.1',
 		'h5py==2.7.1',
 		'imutils==0.4.6',

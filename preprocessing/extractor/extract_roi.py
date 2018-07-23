@@ -4,6 +4,7 @@ import numpy as np
 import os
 import skvideo.io
 
+from colorama import init, Back, Fore, Style
 from imutils import face_utils
 from progress.bar import ShadyBar
 from scipy.misc import imresize
@@ -15,6 +16,9 @@ MOUTH_HEIGHT   = 50
 HORIZONTAL_PAD = 0.10
 
 
+init(autoreset=True)
+
+
 def video_to_frames(video_path: str, output_path: str, detector, predictor) -> bool:
 	video_path  = os.path.realpath(video_path)
 	output_path = os.path.realpath(output_path)
@@ -24,6 +28,7 @@ def video_to_frames(video_path: str, output_path: str, detector, predictor) -> b
 	frames_array = skvideo.io.vread(video_path)
 
 	if len(frames_array) != FRAME_COUNT:
+		print(Back.RED + Fore.WHITE + 'Video {} does not match the frame count specified, skipping'.format(video_path))
 		return False
 
 	mouth_frames_array = []
@@ -31,10 +36,11 @@ def video_to_frames(video_path: str, output_path: str, detector, predictor) -> b
 	# Progress bar
 	bar = ShadyBar(os.path.basename(video_path), max=len(frames_array), suffix='%(percent)d%% [%(elapsed_td)s]')
 
-	for frame in frames_array:
+	for i, frame in enumerate(frames_array):
 		mouth_frame = extract_mouth(frame, detector, predictor)
 
 		if mouth_frame is None:
+			print(Back.RED + Fore.WHITE + 'Could not find ROI at frame {} of video {}, skipping'.format(i, video_path))
 			return False
 
 		mouth_frames_array.append(mouth_frame)

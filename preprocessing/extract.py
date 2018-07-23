@@ -3,8 +3,12 @@ import dlib
 import numpy as np
 import os
 
+from colorama import init, Back, Fore, Style
 from common.files import is_dir, is_file, get_files_in_dir, make_dir_if_not_exists
 from preprocessing.extractor.extract_roi import video_to_frames
+
+
+init(autoreset=True)
 
 
 # python preprocessing\extract.py -v D:\GRID\ -o data\dataset -p bbaf*.mpg
@@ -39,7 +43,7 @@ def extract_to_npy(videos_path: str, output_path: str, predictor_path: str, patt
 		video_target_path = os.path.join(video_target_dir, video_file_name) + '.npy'
 
 		if video_target_path in videos_failed:
-			print('Video {} is probably corrupted and was ignored'.format(video_file_name))
+			print(Fore.RED + 'Video {} is probably corrupted and was ignored'.format(video_file_name))
 			continue
 
 		if group_dir_name == last_group_dir_name:
@@ -53,7 +57,7 @@ def extract_to_npy(videos_path: str, output_path: str, predictor_path: str, patt
 			continue
 
 		if is_file(video_target_path):
-			print('Video {} is already at: {}'.format(video_file_name, video_target_path))
+			print(Style.DIM + Fore.CYAN + 'Video {} is already at: {}'.format(video_file_name, video_target_path))
 			continue
 
 		make_dir_if_not_exists(video_target_dir)
