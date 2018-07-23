@@ -21,6 +21,7 @@ def extract_to_npy(videos_path: str, output_path: str, predictor_path: str, patt
 	print('Searching for files in: {}\nMatch for: {}'.format(videos_path, pattern))
 
 	videos_failed = []
+	had_errors = False
 
 	VIDEOS_FAILED_PATH  = os.path.join(output_path, 'videos_failed.log')
 
@@ -63,6 +64,8 @@ def extract_to_npy(videos_path: str, output_path: str, predictor_path: str, patt
 		make_dir_if_not_exists(video_target_dir)
 
 		if not video_to_frames(file_path, video_target_path, detector, predictor):
+			had_errors = True
+
 			if video_count_per_group > 0:
 				video_count_per_group -= 1
 			else:
@@ -71,7 +74,10 @@ def extract_to_npy(videos_path: str, output_path: str, predictor_path: str, patt
 			with open(VIDEOS_FAILED_PATH, 'a+') as f:
 				f.write(video_target_path + '\n')
 
-	print('\nExtraction finished')
+	if had_errors:
+		print(Fore.YELLOW + '\nExtraction finished with some errors')
+	else:
+		print(Fore.GREEN + '\nExtraction finished!')
 
 
 def main():
