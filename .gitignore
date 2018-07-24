@@ -160,14 +160,9 @@ venv.bak/
 
 # LipNext ignores
 
-data/dataset
-data/results
-data/target
-data/standardize
-data/align
-data/train
-data/val
-data/ordered
+data/*
+!data/dictionaries
+!data/predictors
 
 preprocessing/alignment
 preprocessing/detect-face-parts/pruebas
