@@ -13,6 +13,6 @@ IMAGE_CHANNELS = int(os.getenv('IMAGE_CHANNELS'))
 MAX_STRING     = int(os.getenv('MAX_STRING'))
 OUTPUT_SIZE    = int(os.getenv('OUTPUT_SIZE'))
 
-MINIBATCH_SIZE = int(os.getenv('MINIBATCH_SIZE'))
+BATCH_SIZE = int(os.getenv('BATCH_SIZE'))
 
 HORIZONTAL_PAD = float(os.getenv('HORIZONTAL_PAD'))

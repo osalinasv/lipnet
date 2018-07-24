@@ -7,7 +7,7 @@ import env
 import os
 
 from common.files import make_dir_if_not_exists
-from lipnext.generators.batch_generator_npy import BatchGenerator
+from lipnext.generators.dataset_generator import DatasetGenerator
 
 
 ROOT_PATH       = os.path.dirname(os.path.realpath(__file__))
@@ -17,7 +17,7 @@ OUTPUT_DIR      = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'results'))
 LOG_DIR         = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'logs'))
 
 
-def train(run_name: str, dataset_path: str, epochs: int, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int, minibatch_size: int):
+def train(run_name: str, dataset_path: str, epochs: int, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int, batch_size: int):
 	from keras.callbacks import ModelCheckpoint, TensorBoard
 	from lipnext.model.v2 import create_model, compile_model
 
@@ -36,27 +36,13 @@ def train(run_name: str, dataset_path: str, epochs: int, frame_count: int, image
 	model = create_model(frame_count, image_channels, image_height, image_width, max_string)
 	compile_model(model)
 
-	# model.summary(line_length=119)
-
-	gen = BatchGenerator(
-		dataset_path   = dataset_path,
-		minibatch_size = minibatch_size,
-		frame_count    = frame_count,
-		image_channels = image_channels,
-		image_height   = image_height,
-		image_width    = image_width,
-		max_string     = max_string
-	)
+	datagen = DatasetGenerator(dataset_path, batch_size, max_string)
 
 	model.fit_generator(
-		generator        = gen.train_generator(),
-		validation_data  = gen.val_generator(),
-		steps_per_epoch  = gen.steps_per_epoch,
-		validation_steps = gen.validation_steps,
-		epochs           = epochs,
-		verbose          = 1,
-		workers          = 2,
-		callbacks        = [gen, checkpoint, tensorboard]
+		generator       = datagen.train_generator,
+		validation_data = datagen.val_generator,
+		epochs          = epochs,
+		callbacks       = [checkpoint, tensorboard]
 	)
 
 
@@ -75,7 +61,7 @@ def main():
 	epochs = args['epochs']
 
 	name = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-	train(name, dataset_path, epochs, env.FRAME_COUNT, env.IMAGE_WIDTH, env.IMAGE_HEIGHT, env.IMAGE_CHANNELS, env.MAX_STRING, env.MINIBATCH_SIZE)
+	train(name, dataset_path, epochs, env.FRAME_COUNT, env.IMAGE_WIDTH, env.IMAGE_HEIGHT, env.IMAGE_CHANNELS, env.MAX_STRING, env.BATCH_SIZE)
 
 
 if __name__ == '__main__':

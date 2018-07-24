@@ -1,10 +1,8 @@
-import sys
-sys.path.append('..')
-
 import argparse
 import math
 import os
 import random
+import sys
 import shutil
 
 from common.files import make_dir_if_not_exists, walklevel, get_file_name, get_files_in_dir
