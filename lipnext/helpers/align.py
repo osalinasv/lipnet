@@ -1,5 +1,7 @@
 import numpy as np
 
+from lipnext.utils.labels import text_to_labels
+
 
 class Align(object):
 
@@ -33,15 +35,7 @@ class Align(object):
 
 
 	def get_label(self, sentence):
-		ret = []
-
-		for char in sentence:
-			if char >= 'a' and char <= 'z':
-				ret.append(ord(char) - ord('a'))
-			elif char == ' ':
-				ret.append(26)
-
-		return ret
+		return text_to_labels(sentence)
 
 
 	# Returns an array that is of size absolute_max_string_len. Fills the left spaces with -1 in case the len(label) is less than absolute_max_string_len.

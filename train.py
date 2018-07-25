@@ -18,7 +18,7 @@ LOG_DIR         = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'logs'))
 def train(run_name: str, dataset_path: str, epochs: int, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int, batch_size: int, use_cache: bool):
 	from common.files import make_dir_if_not_exists
 	from keras.callbacks import ModelCheckpoint, TensorBoard
-	from lipnext.model.v2 import create_model, compile_model
+	from lipnext.model.v2 import Lipnext
 	from lipnext.generators.dataset_generator import DatasetGenerator
 
 	make_dir_if_not_exists(OUTPUT_DIR)
@@ -33,12 +33,12 @@ def train(run_name: str, dataset_path: str, epochs: int, frame_count: int, image
 	tensorboard = TensorBoard(log_dir=os.path.join(LOG_DIR, run_name))
 	checkpoint  = ModelCheckpoint(os.path.join(CHECKPOINT_DIR, "weights{epoch:04d}.hdf5"), monitor='val_loss', save_weights_only=True, mode='auto', period=1, verbose=1, save_best_only=True)
 
-	model = create_model(frame_count, image_channels, image_height, image_width, max_string)
-	compile_model(model)
+	lipnext = Lipnext(frame_count, image_channels, image_height, image_width, max_string)
+	lipnext.compile_model()
 
 	datagen = DatasetGenerator(dataset_path, batch_size, max_string, use_cache)
 
-	model.fit_generator(
+	lipnext.model.fit_generator(
 		generator       = datagen.train_generator,
 		validation_data = datagen.val_generator,
 		epochs          = epochs,

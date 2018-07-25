@@ -8,14 +8,22 @@ import numpy as np
 import os
 
 from common.files import is_file, get_file_extension
-from lipnext.helpers.video import get_video_data_from_file, reshape_and_normalize_video_data
-from lipnext.model.v2 import create_model, compile_model
-from preprocessing.extractor.extract_roi import extract_video_data
+
+
+
+DECODER_GREEDY     = True
+DECODER_BEAM_WIDTH = 200
 
 
 # set PYTHONPATH=%PYTHONPATH%;./
 # python predict.py -w data\results\2018-07-24-16-15-18\weights0029.hdf5 -v D:\GRID\s1\bbaf2n.mpg
 def predict(weights_file_path: str, video_file_path: str, predictor_path: str, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int):
+	from lipnext.decoding.decoder import Decoder
+	from lipnext.helpers.video import get_video_data_from_file, reshape_and_normalize_video_data
+	from lipnext.model.v2 import Lipnext
+	from lipnext.utils.labels import labels_to_text
+	from preprocessing.extractor.extract_roi import extract_video_data
+
 	print("\nPREDICTION\n")
 
 	print('Predicting for video at: {}'.format(video_file_path))
@@ -33,15 +41,23 @@ def predict(weights_file_path: str, video_file_path: str, predictor_path: str, f
 		video_data = extract_video_data(video_file_path, detector, predictor)
 		video_data = reshape_and_normalize_video_data(video_data)
 
-	model = create_model(frame_count, image_channels, image_height, image_width, max_string)
-	compile_model(model)
-	model.load_weights(weights_file_path)
+	print()
+
+	lipnext = Lipnext(frame_count, image_channels, image_height, image_width, max_string)
+	lipnext.compile_model()
+
+	lipnext.model.load_weights(weights_file_path)
 
 	x_data = np.array([video_data])
-	y_pred = model.predict(x_data)
+	y_pred = lipnext.predict(x_data)
 
-	print(y_pred.shape)
-	print(y_pred)
+	input_length = np.array([len(video_data)])
+	decoder = Decoder(greedy=DECODER_GREEDY, beam_width=DECODER_BEAM_WIDTH)
+
+	result      = decoder.decode(y_pred, input_length)[0]
+	result_text = labels_to_text(result)
+
+	print('\ny_pred: {}\nresult: {}\nresult: {}'.format(y_pred.shape, result, result_text))
 
 
 def main():
