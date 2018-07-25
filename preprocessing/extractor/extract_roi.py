@@ -50,9 +50,16 @@ def extract_video_data(video_path: str, detector, predictor) -> np.ndarray:
 
 		mouth_frames_array.append(mouth_frame)
 		bar.next()
-	
+
 	bar.finish()
-	return np.array(mouth_frames_array)
+
+	mouth_frames_array = np.array(mouth_frames_array)
+
+	if mouth_frames_array.shape != (env.FRAME_COUNT, env.IMAGE_HEIGHT, env.IMAGE_WIDTH, env.IMAGE_CHANNELS):
+		print(Back.RED + Fore.BLACK + 'ERROR: Video {} does not match the shape {}'.format(video_path, (env.FRAME_COUNT, env.IMAGE_HEIGHT, env.IMAGE_WIDTH, env.IMAGE_CHANNELS)))
+		return None
+	
+	return mouth_frames_array
 
 
 def extract_mouth(frame, detector, predictor):

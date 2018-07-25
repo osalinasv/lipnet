@@ -10,13 +10,12 @@ import os
 from common.files import is_file, get_file_extension
 
 
-
 DECODER_GREEDY     = True
 DECODER_BEAM_WIDTH = 200
 
 
 # set PYTHONPATH=%PYTHONPATH%;./
-# python predict.py -w data\results\2018-07-24-16-15-18\weights0029.hdf5 -v D:\GRID\s1\bbaf2n.mpg
+# python predict.py -w data\results\2018-07-25-14-44-13\weights0001.hdf5 -v D:\GRID\s1\bbaf2n.mpg
 def predict(weights_file_path: str, video_file_path: str, predictor_path: str, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int):
 	from lipnext.decoding.decoder import Decoder
 	from lipnext.helpers.video import get_video_data_from_file, reshape_and_normalize_video_data

@@ -12,6 +12,7 @@ from preprocessing.extractor.extract_roi import video_to_frames
 init(autoreset=True)
 
 
+# set PYTHONPATH=%PYTHONPATH%;./
 # python preprocessing\extract.py -v D:\GRID\ -o data\dataset -lv 200
 def extract_to_npy(videos_path: str, output_path: str, predictor_path: str, pattern: str, first_video: int, last_video: int):
 	videos_path = os.path.realpath(videos_path)
