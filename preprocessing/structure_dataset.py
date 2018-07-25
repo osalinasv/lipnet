@@ -8,7 +8,7 @@ import shutil
 from common.files import make_dir_if_not_exists, walklevel, get_file_name, get_files_in_dir
 
 
-#  python preprocessing\structure_dataset.py -d data\dataset\ -o data\ordered -a D:\GRID\align\
+# python preprocessing\structure_dataset.py -d data\dataset\ -o data\ordered -a D:\GRID\align\
 def structure_dataset(dataset_path: str, output_path: str, alignments_path: str, validation_split: float):
 	dataset_path    = os.path.realpath(dataset_path)
 	output_path     = os.path.realpath(output_path)

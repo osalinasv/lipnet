@@ -6,9 +6,6 @@ import datetime
 import env
 import os
 
-from common.files import make_dir_if_not_exists
-from lipnext.generators.dataset_generator import DatasetGenerator
-
 
 ROOT_PATH       = os.path.dirname(os.path.realpath(__file__))
 
@@ -17,9 +14,12 @@ OUTPUT_DIR      = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'results'))
 LOG_DIR         = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'logs'))
 
 
-def train(run_name: str, dataset_path: str, epochs: int, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int, batch_size: int):
+# python train.py -d data/ordered -e 10
+def train(run_name: str, dataset_path: str, epochs: int, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int, batch_size: int, use_cache: bool):
+	from common.files import make_dir_if_not_exists
 	from keras.callbacks import ModelCheckpoint, TensorBoard
 	from lipnext.model.v2 import create_model, compile_model
+	from lipnext.generators.dataset_generator import DatasetGenerator
 
 	make_dir_if_not_exists(OUTPUT_DIR)
 	make_dir_if_not_exists(LOG_DIR)
@@ -36,17 +36,28 @@ def train(run_name: str, dataset_path: str, epochs: int, frame_count: int, image
 	model = create_model(frame_count, image_channels, image_height, image_width, max_string)
 	compile_model(model)
 
-	datagen = DatasetGenerator(dataset_path, batch_size, max_string)
+	datagen = DatasetGenerator(dataset_path, batch_size, max_string, use_cache)
 
 	model.fit_generator(
 		generator       = datagen.train_generator,
 		validation_data = datagen.val_generator,
 		epochs          = epochs,
+		shuffle         = True,
+		verbose         = 2,
+		workers         = 2,
 		callbacks       = [checkpoint, tensorboard]
 	)
 
 
 def main():
+	print(r'''
+   __         __     ______   __   __     ______     __  __     ______  
+  /\ \       /\ \   /\  == \ /\ "-.\ \   /\  ___\   /\_\_\_\   /\__  _\ 
+  \ \ \____  \ \ \  \ \  _-/ \ \ \-.  \  \ \  __\   \/_/\_\/_  \/_/\ \/ 
+   \ \_____\  \ \_\  \ \_\    \ \_\\"\_\  \ \_____\   /\_\/\_\    \ \_\ 
+    \/_____/   \/_/   \/_/     \/_/ \/_/   \/_____/   \/_/\/_/     \/_/ 
+	''')
+
 	ap = argparse.ArgumentParser()
 
 	ap.add_argument('-d', '--dataset-path', required=True,
@@ -55,13 +66,17 @@ def main():
 	ap.add_argument('-e', '--epochs', required=False,
 		help='(Optional) Number of epochs to run', type=int, default=5000)
 
+	ap.add_argument('-c', '--use-cache', required=False,
+		help='(Optional) Load dataset from a cache file', type=bool, default=True)
+
 	args = vars(ap.parse_args())
 
 	dataset_path = args['dataset_path']
-	epochs = args['epochs']
+	epochs       = args['epochs']
+	use_cache    = args['use_cache']
 
 	name = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-	train(name, dataset_path, epochs, env.FRAME_COUNT, env.IMAGE_WIDTH, env.IMAGE_HEIGHT, env.IMAGE_CHANNELS, env.MAX_STRING, env.BATCH_SIZE)
+	train(name, dataset_path, epochs, env.FRAME_COUNT, env.IMAGE_WIDTH, env.IMAGE_HEIGHT, env.IMAGE_CHANNELS, env.MAX_STRING, env.BATCH_SIZE, use_cache)
 
 
 if __name__ == '__main__':

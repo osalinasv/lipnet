@@ -18,13 +18,23 @@ def video_to_frames(video_path: str, output_path: str, detector, predictor) -> b
 	video_path  = os.path.realpath(video_path)
 	output_path = os.path.realpath(output_path)
 
+	video_data  = extract_video_data(video_path, detector, predictor)
+
+	if video_data is None:
+		return False
+	else:
+		np.save(output_path, video_data)
+		return True
+
+
+def extract_video_data(video_path: str, detector, predictor) -> np.ndarray:
 	print('\nProcessing: {}'.format(video_path))
 
 	frames_array = skvideo.io.vread(video_path)
 
 	if len(frames_array) != env.FRAME_COUNT:
-		print(Back.RED + Fore.WHITE + 'Video {} does not match the frame count specified, skipping'.format(video_path))
-		return False
+		print(Back.RED + Fore.WHITE + 'ERROR: Video {} does not match the frame count specified'.format(video_path))
+		return None
 
 	mouth_frames_array = []
 
@@ -35,18 +45,14 @@ def video_to_frames(video_path: str, output_path: str, detector, predictor) -> b
 		mouth_frame = extract_mouth(frame, detector, predictor)
 
 		if mouth_frame is None:
-			print(Back.RED + Fore.WHITE + 'Could not find ROI at frame {} of video {}, skipping'.format(i, video_path))
-			return False
+			print(Back.RED + Fore.WHITE + 'ERROR: Could not find ROI at frame {} of video {}'.format(i, video_path))
+			return None
 
 		mouth_frames_array.append(mouth_frame)
 		bar.next()
 	
-	mouth_frames_array = np.array(mouth_frames_array)
-	np.save(output_path, mouth_frames_array)
-
 	bar.finish()
-
-	return True
+	return np.array(mouth_frames_array)
 
 
 def extract_mouth(frame, detector, predictor):
