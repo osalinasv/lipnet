@@ -33,7 +33,7 @@ def extract_video_data(video_path: str, detector, predictor) -> np.ndarray:
 	frames_array = skvideo.io.vread(video_path)
 
 	if len(frames_array) != env.FRAME_COUNT:
-		print(Back.RED + Fore.WHITE + 'ERROR: Video {} does not match the frame count specified'.format(video_path))
+		print(Back.RED + Fore.BLACK + 'ERROR: Video {} does not match the frame count specified'.format(video_path))
 		return None
 
 	mouth_frames_array = []
@@ -45,7 +45,7 @@ def extract_video_data(video_path: str, detector, predictor) -> np.ndarray:
 		mouth_frame = extract_mouth(frame, detector, predictor)
 
 		if mouth_frame is None:
-			print(Back.RED + Fore.WHITE + 'ERROR: Could not find ROI at frame {} of video {}'.format(i, video_path))
+			print(Back.RED + Fore.BLACK + 'ERROR: Could not find ROI at frame {} of video {}'.format(i, video_path))
 			return None
 
 		mouth_frames_array.append(mouth_frame)
