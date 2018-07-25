@@ -5,18 +5,31 @@ import random
 import sys
 import shutil
 
+from colorama import init, Fore
 from common.files import make_dir_if_not_exists, walklevel, get_file_name, get_files_in_dir
+from progress.bar import ShadyBar
+
+
+init(autoreset=True)
 
 
 # python preprocessing\structure_dataset.py -d data\dataset\ -o data\ordered -a D:\GRID\align\
 def structure_dataset(dataset_path: str, output_path: str, alignments_path: str, validation_split: float):
+	print('\nDATASET STRUCTURING\n')
+
 	dataset_path    = os.path.realpath(dataset_path)
 	output_path     = os.path.realpath(output_path)
 	alignments_path = os.path.realpath(alignments_path)
 
+	print('Original path:   {}'.format(dataset_path))
+	print('Target path:     {}'.format(output_path))
+	print('Alignments path: {}\n'.format(alignments_path))
+
 	train_list = []
 	val_list   = []
 	align_list = []
+
+	print('Dataset distribution:\n')
 
 	for sub_dir, _, _ in walklevel(dataset_path):
 		if sub_dir == dataset_path:
@@ -31,7 +44,7 @@ def structure_dataset(dataset_path: str, output_path: str, alignments_path: str,
 		validation_amount = math.floor(videos_in_group_len * validation_split)
 		train_amount = videos_in_group_len - validation_amount
 
-		print('Speaker {}: total {} - train {} - val {}'.format(sub_dir_name, videos_in_group_len, train_amount, validation_amount))
+		print('SPEAKER {}:\ttotal videos: {}\ttrain: {}\tval: {}'.format(sub_dir_name, videos_in_group_len, train_amount, validation_amount))
 
 		train_list += videos_in_group[:train_amount]
 		val_list   += videos_in_group[train_amount:]
@@ -40,22 +53,46 @@ def structure_dataset(dataset_path: str, output_path: str, alignments_path: str,
 	target_train_path = os.path.realpath(os.path.join(output_path, "train"))
 	make_dir_if_not_exists(target_train_path)
 
+	train_list_len = len(train_list)
+	print('\nStructuring {} train files...'.format(train_list_len))
+
+	bar = ShadyBar('train', max=train_list_len, suffix='%(percent)d%% [%(elapsed_td)s]')
+
 	for tp in train_list:
 		shutil.copyfile(tp, os.path.join(target_train_path, os.path.basename(tp)))
+		bar.next()
+
+	bar.finish()
 
 	target_val_path = os.path.realpath(os.path.join(output_path, "val"))
 	make_dir_if_not_exists(target_val_path)
 
+	val_list_len = len(val_list)
+	print('\nStructuring {} val files...'.format(val_list_len))
+
+	bar = ShadyBar('val  ', max=val_list_len, suffix='%(percent)d%% [%(elapsed_td)s]')
+
 	for vp in val_list:
 		shutil.copyfile(vp, os.path.join(target_val_path, os.path.basename(vp)))
+		bar.next()
+
+	bar.finish()
 
 	target_align_path = os.path.realpath(os.path.join(output_path, "align"))
 	make_dir_if_not_exists(target_align_path)
 
+	align_list_len = len(align_list)
+	print('\nStructuring {} val files...'.format(align_list_len))
+
+	bar = ShadyBar('align', max=align_list_len, suffix='%(percent)d%% [%(elapsed_td)s]')
+
 	for ap in align_list:
 		shutil.copyfile(os.path.join(alignments_path, ap), os.path.join(target_align_path, ap))
+		bar.next()
 
-	print('\nStructuring finalized')
+	bar.finish()
+
+	print(Fore.GREEN + '\nStructuring finalized!')
 
 
 def main():
