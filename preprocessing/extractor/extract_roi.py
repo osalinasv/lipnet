@@ -16,13 +16,12 @@ init(autoreset=True)
 
 def video_to_frames(video_path: str, output_path: str, detector, predictor) -> bool:
 	video_path  = os.path.realpath(video_path)
-	output_path = os.path.realpath(output_path)
-
 	video_data  = extract_video_data(video_path, detector, predictor)
 
 	if video_data is None:
 		return False
 	else:
+		output_path = os.path.realpath(output_path)
 		np.save(output_path, video_data)
 		return True
 
@@ -62,24 +61,25 @@ def extract_video_data(video_path: str, detector, predictor) -> np.ndarray:
 	return mouth_frames_array
 
 
-def extract_mouth(frame, detector, predictor):
-	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+def extract_mouth(frame: np.ndarray, detector, predictor) -> np.ndarray:
+	gray     = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+	detected = detector(gray, 1)
 
-	for i, rect in enumerate(detector(gray, 1)):
-		shape = predictor(gray, rect)
-		shape = face_utils.shape_to_np(shape)
+	if len(detected) <= 0:
+		return None
 
-		# Obtain the mouth landmark at index 0
-		# See: https://github.com/jrosebr1/imutils/blob/master/imutils/face_utils/helpers.py
-		(_, (i, j)) = list(face_utils.FACIAL_LANDMARKS_IDXS.items())[0]
+	shape = face_utils.shape_to_np(predictor(gray, detected[0]))
 
-		# Extract the ROI of the face region as a separate image
-		np_mouth_points = np.array([shape[i:j]])
+	# Obtain the mouth landmark at index 0
+	# See: https://github.com/jrosebr1/imutils/blob/master/imutils/face_utils/helpers.py
+	_, (i, j) = list(face_utils.FACIAL_LANDMARKS_IDXS.items())[0]
 
-		return crop_mouth_region(np_mouth_points[0], frame)
+	# Extract the ROI of the face region as a separate image
+	np_mouth_points = np.array([shape[i:j]][0])
+	return crop_mouth_region(np_mouth_points, frame)
 
 
-def crop_mouth_region(np_mouth_points, frame):
+def crop_mouth_region(np_mouth_points: np.ndarray, frame: np.ndarray) -> np.ndarray:
 	normalize_ratio = None
 	mouth_centroid  = np.mean(np_mouth_points[:, -2:], axis=0)
 
@@ -89,7 +89,7 @@ def crop_mouth_region(np_mouth_points, frame):
 
 		normalize_ratio = env.IMAGE_WIDTH / float(mouth_right - mouth_left)
 
-	new_img_shape = (int(frame.shape[0] * normalize_ratio), int(frame.shape[1] * normalize_ratio))
+	new_img_shape = int(frame.shape[0] * normalize_ratio), int(frame.shape[1] * normalize_ratio)
 	resized_img   = imresize(frame, new_img_shape)
 
 	mouth_centroid_norm = mouth_centroid * normalize_ratio
