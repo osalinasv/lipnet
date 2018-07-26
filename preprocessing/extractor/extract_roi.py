@@ -2,21 +2,27 @@ import cv2
 import dlib
 import env
 import numpy as np
+import operator
 import os
 import skvideo.io
 
-from colorama import init, Back, Fore, Style
+from colorama import init, Back, Fore
 from imutils import face_utils
 from progress.bar import ShadyBar
-from scipy.misc import imresize
 
 
 init(autoreset=True)
 
 
+VIDEO_SHAPE = (env.FRAME_COUNT, env.IMAGE_HEIGHT, env.IMAGE_WIDTH, env.IMAGE_CHANNELS)
+FRAME_SHAPE = (env.IMAGE_HEIGHT, env.IMAGE_WIDTH, env.IMAGE_CHANNELS)
+IMAGE_SIZE  = (env.IMAGE_HEIGHT, env.IMAGE_WIDTH)
+ERROR_LOG   = Back.RED + Fore.BLACK + 'ERROR: '
+
+
 def video_to_frames(video_path: str, output_path: str, detector, predictor) -> bool:
-	video_path  = os.path.realpath(video_path)
-	video_data  = extract_video_data(video_path, detector, predictor)
+	video_path = os.path.realpath(video_path)
+	video_data = extract_video_data(video_path, detector, predictor)
 
 	if video_data is None:
 		return False
@@ -26,89 +32,76 @@ def video_to_frames(video_path: str, output_path: str, detector, predictor) -> b
 		return True
 
 
-def extract_video_data(video_path: str, detector, predictor) -> np.ndarray:
-	print('\nProcessing: {}'.format(video_path))
+def extract_video_data(path: str, detector, predictor) -> np.ndarray:
+	print('\n{}'.format(path))
+	
+	video_data     = skvideo.io.vread(path)
+	video_data_len = len(video_data)
 
-	frames_array = skvideo.io.vread(video_path)
-
-	if len(frames_array) != env.FRAME_COUNT:
-		print(Back.RED + Fore.BLACK + 'ERROR: Video {} does not match the frame count specified'.format(video_path))
+	if video_data_len != env.FRAME_COUNT:
+		print(ERROR_LOG + 'Wrong number of frames: {}'.format(video_data_len))
 		return None
 
-	mouth_frames_array = []
+	mouth_data = []
+	bar = ShadyBar(os.path.basename(path), max=video_data_len, suffix='%(percent)d%% [%(elapsed_td)s]')
 
-	# Progress bar
-	bar = ShadyBar(os.path.basename(video_path), max=len(frames_array), suffix='%(percent)d%% [%(elapsed_td)s]')
+	for i, f in enumerate(video_data):
+		c = extract_mouth_on_frame(f, detector, predictor, i)
+		if c is None: return None
+		mouth_data.append(c)
 
-	for i, frame in enumerate(frames_array):
-		mouth_frame = extract_mouth(frame, detector, predictor)
-
-		if mouth_frame is None:
-			print(Back.RED + Fore.BLACK + 'ERROR: Could not find ROI at frame {} of video {}'.format(i, video_path))
-			return None
-
-		mouth_frames_array.append(mouth_frame)
 		bar.next()
 
+	mouth_data = np.array(mouth_data)
 	bar.finish()
 
-	mouth_frames_array = np.array(mouth_frames_array)
+	return mouth_data
 
-	if mouth_frames_array.shape != (env.FRAME_COUNT, env.IMAGE_HEIGHT, env.IMAGE_WIDTH, env.IMAGE_CHANNELS):
-		print(Back.RED + Fore.BLACK + 'ERROR: Video {} does not match the shape {}'.format(video_path, (env.FRAME_COUNT, env.IMAGE_HEIGHT, env.IMAGE_WIDTH, env.IMAGE_CHANNELS)))
+
+def extract_mouth_on_frame(frame: np.ndarray, detector, predictor, idx: int) -> np.ndarray:
+	m_points = extract_mouth_points(frame, detector, predictor)
+
+	if m_points is None:
+		print('\n' + ERROR_LOG + 'No ROI found at frame {}'.format(idx))
 		return None
-	
-	return mouth_frames_array
+
+	m_center   = get_mouth_points_center(m_points)
+	s_m_center = swap_center_axis(m_center)
+
+	crop = crop_image(frame, s_m_center, IMAGE_SIZE)
+
+	if crop.shape != FRAME_SHAPE:
+		print('\n' + ERROR_LOG + 'Wrong shape {} at frame {}'.format(crop.shape, idx))
+		return None
+
+	return crop
 
 
-def extract_mouth(frame: np.ndarray, detector, predictor) -> np.ndarray:
+def crop_image(image: np.ndarray, center: tuple, size: tuple) -> np.ndarray:
+	start  = tuple(map(lambda a, b: a - b // 2, center, size))
+	end    = tuple(map(operator.add, start, size))
+	slices = tuple(map(slice, start, end))
+
+	return image[slices]
+
+
+def swap_center_axis(t: tuple) -> tuple:
+	return t[1], t[0]
+
+
+def get_mouth_points_center(mouth_points: np.ndarray) -> np.ndarray:
+	mouth_centroid = np.mean(mouth_points[:, -2:], axis=0, dtype=int)
+	return mouth_centroid
+
+
+def extract_mouth_points(frame: np.ndarray, detector, predictor) -> np.ndarray:
 	gray     = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 	detected = detector(gray, 1)
 
 	if len(detected) <= 0:
 		return None
 
-	shape = face_utils.shape_to_np(predictor(gray, detected[0]))
-
-	# Obtain the mouth landmark at index 0
-	# See: https://github.com/jrosebr1/imutils/blob/master/imutils/face_utils/helpers.py
+	shape     = face_utils.shape_to_np(predictor(gray, detected[0]))
 	_, (i, j) = list(face_utils.FACIAL_LANDMARKS_IDXS.items())[0]
 
-	# Extract the ROI of the face region as a separate image
-	np_mouth_points = np.array([shape[i:j]][0])
-	return crop_mouth_region(np_mouth_points, frame)
-
-
-def crop_mouth_region(np_mouth_points: np.ndarray, frame: np.ndarray) -> np.ndarray:
-	normalize_ratio = None
-	mouth_centroid  = np.mean(np_mouth_points[:, -2:], axis=0)
-
-	if normalize_ratio is None:
-		mouth_left  = np.min(np_mouth_points[:, :-1]) * (1.0 - env.HORIZONTAL_PAD)
-		mouth_right = np.max(np_mouth_points[:, :-1]) * (1.0 + env.HORIZONTAL_PAD)
-
-		normalize_ratio = env.IMAGE_WIDTH / float(mouth_right - mouth_left)
-
-	new_img_shape = int(frame.shape[0] * normalize_ratio), int(frame.shape[1] * normalize_ratio)
-	resized_img   = imresize(frame, new_img_shape)
-
-	mouth_centroid_norm = mouth_centroid * normalize_ratio
-
-	mouth_l = int(mouth_centroid_norm[0] - env.IMAGE_WIDTH / 2)
-	mouth_r = int(mouth_centroid_norm[0] + env.IMAGE_WIDTH / 2)
-	mouth_t = int(mouth_centroid_norm[1] - env.IMAGE_HEIGHT / 2)
-	mouth_b = int(mouth_centroid_norm[1] + env.IMAGE_HEIGHT / 2)
-
-	diff_width = mouth_r - mouth_l
-
-	if diff_width > env.IMAGE_WIDTH:
-		mouth_r += env.IMAGE_WIDTH - diff_width
-
-	diff_height = mouth_b - mouth_t
-
-	if diff_height > env.IMAGE_HEIGHT:
-		mouth_b += env.IMAGE_HEIGHT - diff_height
-
-	mouth_crop_image = resized_img[mouth_t:mouth_b, mouth_l:mouth_r]
-
-	return mouth_crop_image
+	return np.array([shape[i:j]][0])

@@ -20,7 +20,7 @@ def extract_to_npy(videos_path: str, output_path: str, predictor_path: str, patt
 	predictor_path = os.path.realpath(predictor_path)
 
 	print('\nEXTRACT\n')
-	print('Searching for files in: {}\nMatch for: {}'.format(videos_path, pattern))
+	print('Searching for files in: {}\nMatch for: {}\n'.format(videos_path, pattern))
 
 	videos_failed = []
 	had_errors = False

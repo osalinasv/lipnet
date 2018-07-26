@@ -14,5 +14,3 @@ MAX_STRING     = int(os.getenv('MAX_STRING'))
 OUTPUT_SIZE    = int(os.getenv('OUTPUT_SIZE'))
 
 BATCH_SIZE = int(os.getenv('BATCH_SIZE'))
-
-HORIZONTAL_PAD = float(os.getenv('HORIZONTAL_PAD'))
