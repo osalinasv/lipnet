@@ -10,7 +10,8 @@ IMAGE_WIDTH    = int(os.getenv('IMAGE_WIDTH'))
 IMAGE_HEIGHT   = int(os.getenv('IMAGE_HEIGHT'))
 IMAGE_CHANNELS = int(os.getenv('IMAGE_CHANNELS'))
 
-MAX_STRING     = int(os.getenv('MAX_STRING'))
-OUTPUT_SIZE    = int(os.getenv('OUTPUT_SIZE'))
+MAX_STRING  = int(os.getenv('MAX_STRING'))
+OUTPUT_SIZE = int(os.getenv('OUTPUT_SIZE'))
 
 BATCH_SIZE = int(os.getenv('BATCH_SIZE'))
+VAL_SPLIT  = float(os.getenv('VAL_SPLIT'))

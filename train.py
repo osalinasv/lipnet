@@ -1,6 +1,3 @@
-import sys
-sys.path.append('.')
-
 import argparse
 import datetime
 import env
@@ -14,8 +11,8 @@ OUTPUT_DIR      = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'results'))
 LOG_DIR         = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'logs'))
 
 
-# python train.py -d data/ordered -e 10
-def train(run_name: str, dataset_path: str, epochs: int, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int, batch_size: int, use_cache: bool):
+# python train.py -d data/dataset -a D:/GRID/align/ -e 10
+def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int, batch_size: int, val_split: float, use_cache: bool):
 	from common.files import make_dir_if_not_exists
 	from keras.callbacks import ModelCheckpoint, TensorBoard
 	from lipnext.model.v2 import Lipnext
@@ -36,7 +33,7 @@ def train(run_name: str, dataset_path: str, epochs: int, frame_count: int, image
 	lipnext = Lipnext(frame_count, image_channels, image_height, image_width, max_string)
 	lipnext.compile_model()
 
-	datagen = DatasetGenerator(dataset_path, batch_size, max_string, use_cache)
+	datagen = DatasetGenerator(dataset_path, aligns_path, batch_size, max_string, val_split, use_cache)
 
 	lipnext.model.fit_generator(
 		generator       = datagen.train_generator,
@@ -44,7 +41,7 @@ def train(run_name: str, dataset_path: str, epochs: int, frame_count: int, image
 		epochs          = epochs,
 		shuffle         = True,
 		verbose         = 1,
-		max_queue_size  = 5,
+		max_queue_size  = 10,
 		use_multiprocessing = True,
 		workers         = 2,
 		callbacks       = [checkpoint, tensorboard]
@@ -63,7 +60,10 @@ def main():
 	ap = argparse.ArgumentParser()
 
 	ap.add_argument('-d', '--dataset-path', required=True,
-		help='Path to the structured dataset')
+		help='Path to the dataset root directory')
+
+	ap.add_argument('-a', '--aligns-path', required=True,
+		help='Path to the directory containing all align files')
 
 	ap.add_argument('-e', '--epochs', required=False,
 		help='(Optional) Number of epochs to run', type=int, default=5000)
@@ -74,11 +74,12 @@ def main():
 	args = vars(ap.parse_args())
 
 	dataset_path = args['dataset_path']
+	aligns_path  = args['aligns_path']
 	epochs       = args['epochs']
 	use_cache    = args['use_cache']
 
 	name = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-	train(name, dataset_path, epochs, env.FRAME_COUNT, env.IMAGE_WIDTH, env.IMAGE_HEIGHT, env.IMAGE_CHANNELS, env.MAX_STRING, env.BATCH_SIZE, use_cache)
+	train(name, dataset_path, aligns_path, epochs, env.FRAME_COUNT, env.IMAGE_WIDTH, env.IMAGE_HEIGHT, env.IMAGE_CHANNELS, env.MAX_STRING, env.BATCH_SIZE, env.VAL_SPLIT, use_cache)
 
 
 if __name__ == '__main__':

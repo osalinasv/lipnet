@@ -29,7 +29,7 @@ def get_files_in_dir(path: str, pattern: str):
 				yield os.path.realpath(os.path.join(root, basename))
 
 
-def walklevel(some_dir, level=1):
+def walk_level(some_dir, level=1):
 	some_dir = some_dir.rstrip(os.path.sep)
 
 	assert os.path.isdir(some_dir)
@@ -43,15 +43,3 @@ def walklevel(some_dir, level=1):
 
 		if num_sep + level <= num_sep_this:
 			del dirs[:]
-
-
-def read_subfolders(path):
-	subfolders = []
-
-	for subdir, _, _ in walklevel(path):
-		if subdir == path:
-			continue
-
-		subfolders.append(subdir)
-
-	return subfolders
