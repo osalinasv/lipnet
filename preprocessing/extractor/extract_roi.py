@@ -7,6 +7,7 @@ import os
 import skvideo.io
 
 from colorama import init, Back, Fore
+from common.files import get_file_name
 from imutils import face_utils
 from progress.bar import ShadyBar
 
@@ -43,7 +44,7 @@ def extract_video_data(path: str, detector, predictor) -> np.ndarray:
 		return None
 
 	mouth_data = []
-	bar = ShadyBar(os.path.basename(path), max=video_data_len, suffix='%(percent)d%% [%(elapsed_td)s]')
+	bar = ShadyBar(get_file_name(path) + '.npy', max=video_data_len, suffix='%(percent)d%% [%(elapsed_td)s]')
 
 	for i, f in enumerate(video_data):
 		c = extract_mouth_on_frame(f, detector, predictor, i)

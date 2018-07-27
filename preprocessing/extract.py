@@ -5,7 +5,7 @@ import os
 import sys
 
 from colorama import init, Back, Fore, Style
-from common.files import is_dir, is_file, get_files_in_dir, make_dir_if_not_exists
+from common.files import is_dir, is_file, get_files_in_dir, get_file_name, make_dir_if_not_exists
 from preprocessing.extractor.extract_roi import video_to_frames
 
 
@@ -40,7 +40,7 @@ def extract_to_npy(videos_path: str, output_path: str, predictor_path: str, patt
 
 	for file_path in get_files_in_dir(videos_path, pattern):
 		group_dir_name = os.path.basename(os.path.dirname(file_path))
-		video_file_name = os.path.splitext(os.path.basename(file_path))[0]
+		video_file_name = get_file_name(file_path)
 
 		video_target_dir  = os.path.join(output_path, group_dir_name)
 		video_target_path = os.path.join(video_target_dir, video_file_name) + '.npy'
