@@ -5,7 +5,6 @@ import numpy as np
 import os
 
 from common.files import is_file, get_file_extension
-from lipnext.decoding.spell import Spell
 
 
 ROOT_PATH          = os.path.dirname(os.path.realpath(__file__))
@@ -18,6 +17,7 @@ DECODER_BEAM_WIDTH = 200
 # python predict.py -w data\results\2018-07-26-20-35-00\weights0010.hdf5 -v D:\GRID\s34\sbwe6a.mpg
 def predict(weights_file_path: str, video_file_path: str, predictor_path: str, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int):
 	from lipnext.decoding.decoder import Decoder
+	from lipnext.decoding.spell import Spell
 	from lipnext.helpers.video import get_video_data_from_file, reshape_and_normalize_video_data
 	from lipnext.model.v2 import Lipnext
 	from lipnext.utils.labels import labels_to_text
