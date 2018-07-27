@@ -3,8 +3,13 @@ import dlib
 import env
 import numpy as np
 import os
+import skvideo
 
-from common.files import is_file, get_file_extension
+from colorama import init, Fore
+from common.files import is_file, is_video, get_file_extension
+
+
+init(autoreset=True)
 
 
 ROOT_PATH          = os.path.dirname(os.path.realpath(__file__))
@@ -18,7 +23,8 @@ DECODER_BEAM_WIDTH = 200
 def predict(weights_file_path: str, video_file_path: str, predictor_path: str, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int):
 	from lipnext.decoding.decoder import Decoder
 	from lipnext.decoding.spell import Spell
-	from lipnext.helpers.video import get_video_data_from_file, reshape_and_normalize_video_data
+	from lipnext.decoding.visualization import visualize_video_subtitle
+	from lipnext.helpers.video import reshape_and_normalize_video_data
 	from lipnext.model.v2 import Lipnext
 	from lipnext.utils.labels import labels_to_text
 	from preprocessing.extractor.extract_roi import extract_video_data
@@ -28,17 +34,11 @@ def predict(weights_file_path: str, video_file_path: str, predictor_path: str, f
 	print('Predicting for video at: {}'.format(video_file_path))
 	print('Using predictor at:      {}'.format(predictor_path))
 
-	video_file_extension = get_file_extension(video_file_path)
-	video_data = None
+	detector  = dlib.get_frontal_face_detector()
+	predictor = dlib.shape_predictor(predictor_path)
 
-	if video_file_extension == '.npy':
-		video_data = get_video_data_from_file(video_file_path)
-	else:
-		detector  = dlib.get_frontal_face_detector()
-		predictor = dlib.shape_predictor(predictor_path)
-
-		video_data = extract_video_data(video_file_path, detector, predictor)
-		video_data = reshape_and_normalize_video_data(video_data)
+	video_data = extract_video_data(video_file_path, detector, predictor)
+	video_data = reshape_and_normalize_video_data(video_data)
 
 	print()
 
@@ -60,6 +60,10 @@ def predict(weights_file_path: str, video_file_path: str, predictor_path: str, f
 
 	print('\ny_pred shape:   {}'.format(y_pred.shape))
 	print('decoded result: {}'.format(result))
+
+	print('\nPreparing visualization...')
+	original_video_data = skvideo.io.vread(video_file_path)
+	visualize_video_subtitle(original_video_data, result)
 
 
 def main():
@@ -91,11 +95,15 @@ def main():
 	predictor_path = os.path.realpath(args["predictor_path"])
 
 	if not is_file(weights) or get_file_extension(weights) != '.hdf5':
-		print('Invalid path to trained weights file')
+		print(Fore.RED + '\nERROR: Trained weights path is not a valid file')
 		return
 
 	if not is_file(video):
-		print('Invalid path to video file')
+		print(Fore.RED + '\nERROR: Video file path is not valid')
+		return
+
+	if not is_file(predictor_path) or get_file_extension(predictor_path) != '.dat':
+		print(Fore.RED + '\nERROR: Predictor path is not a valid file')
 		return
 	
 	predict(weights, video, predictor_path, env.FRAME_COUNT, env.IMAGE_WIDTH, env.IMAGE_HEIGHT, env.IMAGE_CHANNELS, env.MAX_STRING)

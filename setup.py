@@ -18,6 +18,7 @@ setup(
 		'numpy==1.15.0',
 		'opencv-python==3.4.1.15',
 		'Pillow==5.1.0',
+		'pymediainfo==2.3.0',
 		'python-dotenv==0.8.2',
 		'progress==1.4',
 		'scikit-image==0.14.0',

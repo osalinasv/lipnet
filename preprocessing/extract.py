@@ -5,8 +5,7 @@ import os
 import sys
 
 from colorama import init, Back, Fore, Style
-from common.files import is_dir, is_file, get_files_in_dir, get_file_name, make_dir_if_not_exists
-from preprocessing.extractor.extract_roi import video_to_frames
+from common.files import is_dir, is_file, get_file_extension
 
 
 init(autoreset=True)
@@ -15,6 +14,9 @@ init(autoreset=True)
 # set PYTHONPATH=%PYTHONPATH%;./
 # python preprocessing\extract.py -v D:\GRID\ -o data\dataset -lv 200
 def extract_to_npy(videos_path: str, output_path: str, predictor_path: str, pattern: str, first_video: int, last_video: int):
+	from common.files import get_files_in_dir, get_file_name, make_dir_if_not_exists
+	from preprocessing.extractor.extract_roi import video_to_frames
+
 	videos_path = os.path.realpath(videos_path)
 	output_path = os.path.realpath(output_path)
 	predictor_path = os.path.realpath(predictor_path)
@@ -115,11 +117,23 @@ def main():
 	predictor_path = args["predictor_path"]
 
 	if not is_dir(videos_path):
-		print('Invalid path to videos directory')
+		print(Fore.RED + 'ERROR: Invalid path to videos directory')
 		return
 
 	if not isinstance(output_path, str):
-		print('Invalid path to output directory')
+		print(Fore.RED + 'ERROR: Invalid path to output directory')
+		return
+
+	if not is_file(predictor_path) or get_file_extension(predictor_path) != '.dat':
+		print(Fore.RED + '\nERROR: Predictor path is not a valid file')
+		return
+
+	if not isinstance(first_video, int) or first_video < 0:
+		print(Fore.RED + '\nERROR: The first video index must be a valid positive integer')
+		return
+
+	if not isinstance(last_video, int) or last_video < first_video:
+		print(Fore.RED + '\nERROR: The last video index must be a valid positive integer greater than the first video index')
 		return
 
 	extract_to_npy(videos_path, output_path, predictor_path, pattern, first_video, last_video)

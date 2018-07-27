@@ -1,6 +1,8 @@
 import os
 import fnmatch
 
+from pymediainfo import MediaInfo
+
 
 def is_dir(path: str) -> bool:
 	return isinstance(path, str) and os.path.exists(path) and os.path.isdir(path)
@@ -8,6 +10,16 @@ def is_dir(path: str) -> bool:
 
 def is_file(path: str) -> bool:
 	return isinstance(path, str) and os.path.exists(path) and os.path.isfile(path)
+
+
+def is_video(path: str) -> bool:
+	file_info = MediaInfo.parse(path)
+
+	for track in file_info.tracks:
+		if track.track_type == 'Video':
+			return True
+
+	return False
 
 
 def get_file_extension(path: str) -> str:
@@ -29,7 +41,7 @@ def get_files_in_dir(path: str, pattern: str):
 				yield os.path.realpath(os.path.join(root, basename))
 
 
-def walk_level(some_dir, level=1):
+def walk_level(some_dir: str, level: int = 1):
 	some_dir = some_dir.rstrip(os.path.sep)
 
 	assert os.path.isdir(some_dir)

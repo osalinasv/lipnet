@@ -3,6 +3,12 @@ import datetime
 import env
 import os
 
+from colorama import init, Fore
+from common.files import is_dir
+
+
+init(autoreset=True)
+
 
 ROOT_PATH  = os.path.dirname(os.path.realpath(__file__))
 OUTPUT_DIR = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'results'))
@@ -75,6 +81,18 @@ def main():
 	aligns_path  = args['aligns_path']
 	epochs       = args['epochs']
 	use_cache    = args['use_cache']
+
+	if not is_dir(dataset_path):
+		print(Fore.RED + '\nERROR: The dataset path is not a directory')
+		return
+
+	if not is_dir(aligns_path):
+		print(Fore.RED + '\nERROR: The aligns path is not a directory')
+		return
+
+	if not isinstance(epochs, int) or epochs <= 0:
+		print(Fore.RED + '\nERROR: The number of epochs must be a valid integer greater than zero')
+		return
 
 	name = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 	train(name, dataset_path, aligns_path, epochs, env.FRAME_COUNT, env.IMAGE_WIDTH, env.IMAGE_HEIGHT, env.IMAGE_CHANNELS, env.MAX_STRING, env.BATCH_SIZE, env.VAL_SPLIT, use_cache)
