@@ -1,6 +1,3 @@
-import sys
-sys.path.append('.')
-
 import argparse
 import dlib
 import env
@@ -8,14 +5,17 @@ import numpy as np
 import os
 
 from common.files import is_file, get_file_extension
+from lipnext.decoding.spell import Spell
 
 
+ROOT_PATH          = os.path.dirname(os.path.realpath(__file__))
+DICTIONARY_PATH    = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'dictionaries', 'grid.txt'))
 DECODER_GREEDY     = True
 DECODER_BEAM_WIDTH = 200
 
 
 # set PYTHONPATH=%PYTHONPATH%;./
-# python predict.py -w data\results\2018-07-25-14-44-13\weights0001.hdf5 -v D:\GRID\s1\bbaf2n.mpg
+# python predict.py -w data\results\2018-07-26-20-35-00\weights0010.hdf5 -v D:\GRID\s34\sbwe6a.mpg
 def predict(weights_file_path: str, video_file_path: str, predictor_path: str, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int):
 	from lipnext.decoding.decoder import Decoder
 	from lipnext.helpers.video import get_video_data_from_file, reshape_and_normalize_video_data
@@ -51,12 +51,15 @@ def predict(weights_file_path: str, video_file_path: str, predictor_path: str, f
 	y_pred = lipnext.predict(x_data)
 
 	input_length = np.array([len(video_data)])
-	decoder = Decoder(greedy=DECODER_GREEDY, beam_width=DECODER_BEAM_WIDTH)
 
-	result      = decoder.decode(y_pred, input_length)[0]
-	result_text = labels_to_text(result)
+	spell   = Spell(DICTIONARY_PATH)
+	decoder = Decoder(greedy=DECODER_GREEDY, beam_width=DECODER_BEAM_WIDTH,
+		postprocessors=[labels_to_text, spell.sentence])
 
-	print('\ny_pred: {}\nresult: {}\nresult: {}'.format(y_pred.shape, result, result_text))
+	result = decoder.decode(y_pred, input_length)[0]
+
+	print('\ny_pred shape:   {}'.format(y_pred.shape))
+	print('decoded result: {}'.format(result))
 
 
 def main():

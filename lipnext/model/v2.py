@@ -70,17 +70,12 @@ class Lipnext(object):
 		else:
 			return frame_count, image_width, image_height, image_channels
 
+
 	def predict(self, input_batch):
 		return self.test_function([input_batch, 0])[0] # the first 0 indicates test
+
 
 	@property
 	def test_function(self):
 		# captures output of softmax, which is the real prediction output of the model
 		return k.function([self.input_layer, k.learning_phase()], [self.y_pred, k.learning_phase()])
-
-
-if __name__ == '__main__':
-	lipnext = Lipnext(frame_count=75, image_channels=3, image_height=50, image_width=100, max_string=32)
-	lipnext.model.summary()
-
-	lipnext.compile_model()

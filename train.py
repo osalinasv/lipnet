@@ -4,11 +4,9 @@ import env
 import os
 
 
-ROOT_PATH       = os.path.dirname(os.path.realpath(__file__))
-
-DICTIONARY_PATH = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'dictionaries', 'grid.txt'))
-OUTPUT_DIR      = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'results'))
-LOG_DIR         = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'logs'))
+ROOT_PATH  = os.path.dirname(os.path.realpath(__file__))
+OUTPUT_DIR = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'results'))
+LOG_DIR    = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'logs'))
 
 
 # python train.py -d data/dataset -a D:/GRID/align/ -e 10
@@ -28,7 +26,7 @@ def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame
 	make_dir_if_not_exists(CHECKPOINT_DIR)
 
 	tensorboard = TensorBoard(log_dir=os.path.join(LOG_DIR, run_name))
-	checkpoint  = ModelCheckpoint(os.path.join(CHECKPOINT_DIR, "weights{epoch:04d}.hdf5"), monitor='val_loss', save_weights_only=True, mode='auto', period=1, verbose=1, save_best_only=True)
+	checkpoint  = ModelCheckpoint(os.path.join(CHECKPOINT_DIR, "w-{epoch:04d}-{val_loss:.2f}.hdf5"), monitor='val_loss', save_weights_only=True, mode='auto', period=1, verbose=1, save_best_only=True)
 
 	lipnext = Lipnext(frame_count, image_channels, image_height, image_width, max_string)
 	lipnext.compile_model()
