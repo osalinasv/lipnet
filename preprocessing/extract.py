@@ -15,20 +15,19 @@ def extract_to_npy(videos_path: str, output_path: str, predictor_path: str, patt
 	from common.files import get_files_in_dir, get_file_name, make_dir_if_not_exists
 	from preprocessing.extractor.extract_roi import video_to_frames
 
-	videos_path = os.path.realpath(videos_path)
-	output_path = os.path.realpath(output_path)
-	predictor_path = os.path.realpath(predictor_path)
-
 	print('\nEXTRACT\n')
-	print('Searching for files in: {}\nMatch for: {}\n'.format(videos_path, pattern))
+
+	print('Searching for files in: {}'.format(videos_path))
+	print('Using predictor at:     {}'.format(predictor_path))
+	print('Match for:              {}\n'.format(pattern))
 
 	videos_failed = []
 	had_errors = False
 
-	VIDEOS_FAILED_PATH = os.path.join(output_path, 'videos_failed.log')
+	videos_failed_path = os.path.join(output_path, 'videos_failed.log')
 
-	if is_file(VIDEOS_FAILED_PATH):
-		with open(VIDEOS_FAILED_PATH, 'r+') as f:
+	if is_file(videos_failed_path):
+		with open(videos_failed_path, 'r+') as f:
 			for line in f.readlines():
 				videos_failed.append(line.rstrip())
 
@@ -73,7 +72,7 @@ def extract_to_npy(videos_path: str, output_path: str, predictor_path: str, patt
 			else:
 				video_count_per_group = 0
 
-			with open(VIDEOS_FAILED_PATH, 'a+') as f:
+			with open(videos_failed_path, 'a+') as f:
 				f.write(video_target_path + '\n')
 
 	if had_errors:
@@ -83,6 +82,14 @@ def extract_to_npy(videos_path: str, output_path: str, predictor_path: str, patt
 
 
 def main():
+	print(r'''
+   __         __     ______   __   __     ______     __  __     ______  
+  /\ \       /\ \   /\  == \ /\ "-.\ \   /\  ___\   /\_\_\_\   /\__  _\ 
+  \ \ \____  \ \ \  \ \  _-/ \ \ \-.  \  \ \  __\   \/_/\_\/_  \/_/\ \/ 
+   \ \_____\  \ \_\  \ \_\    \ \_\\"\_\  \ \_____\   /\_\/\_\    \ \_\ 
+    \/_____/   \/_/   \/_/     \/_/ \/_/   \/_____/   \/_/\/_/     \/_/ 
+	''')
+
 	ap = argparse.ArgumentParser()
 
 	ap.add_argument("-v",  "--videos-path", required=True,
@@ -91,10 +98,10 @@ def main():
 	ap.add_argument("-o",  "--output-path", required=True, 
 		help="Path for the extracted frames")
 
-	DEFAULT_PREDICTOR = os.path.join(__file__, '..', '..', 'data', 'predictors', 'shape_predictor_68_face_landmarks.dat')
+	default_predictor = os.path.join(__file__, '..', '..', 'data', 'predictors', 'shape_predictor_68_face_landmarks.dat')
 
 	ap.add_argument("-pp", "--predictor-path", required=False,
-		help="(Optional) Path to the predictor .dat file", default=DEFAULT_PREDICTOR)
+		help="(Optional) Path to the predictor .dat file", default=default_predictor)
 
 	ap.add_argument("-p",  "--pattern", required=False,
 		help="(Optional) File name pattern to match", default='*.mpg')
@@ -107,12 +114,12 @@ def main():
 
 	args = vars(ap.parse_args())
 
-	videos_path    = args["videos_path"]
-	output_path    = args["output_path"]
+	videos_path    = os.path.realpath(args["videos_path"])
+	output_path    = os.path.realpath(args["output_path"])
 	pattern        = args["pattern"]
 	first_video    = args["first_video"]
 	last_video     = args["last_video"]
-	predictor_path = args["predictor_path"]
+	predictor_path = os.path.realpath(args["predictor_path"])
 
 	if not is_dir(videos_path):
 		print(Fore.RED + 'ERROR: Invalid path to videos directory')

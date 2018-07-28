@@ -33,6 +33,7 @@ def predict(weights_file_path: str, video_file_path: str, predictor_path: str, f
 	print("\nPREDICTION\n")
 
 	print('Predicting for video at: {}'.format(video_file_path))
+	print('Loading weights at:      {}'.format(weights_file_path))
 	print('Using predictor at:      {}'.format(predictor_path))
 
 	detector  = dlib.get_frontal_face_detector()

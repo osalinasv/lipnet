@@ -81,8 +81,8 @@ def main():
 
 	args = vars(ap.parse_args())
 
-	dataset_path = args['dataset_path']
-	aligns_path  = args['aligns_path']
+	dataset_path = os.path.realpath(args['dataset_path'])
+	aligns_path  = os.path.realpath(args['aligns_path'])
 	epochs       = args['epochs']
 	use_cache    = args['use_cache']
 
@@ -99,6 +99,7 @@ def main():
 		return
 
 	name = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+	
 	train(name, dataset_path, aligns_path, epochs, env.FRAME_COUNT, env.IMAGE_WIDTH, env.IMAGE_HEIGHT, env.IMAGE_CHANNELS, env.MAX_STRING, env.BATCH_SIZE, env.VAL_SPLIT, use_cache)
 
 
