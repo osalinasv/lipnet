@@ -26,20 +26,20 @@ class Align(object):
 		self.padded_label = self.get_padded_label(self.label)
 
 
-	def strip(self, align, items):
+	def strip(self, align: list, items: [str]) -> [str]:
 		return [sub for sub in align if sub[2] not in items]
 
 
-	def get_sentence(self, align):
+	def get_sentence(self, align: list) -> str:
 		return ' '.join([y[-1] for y in align if y[-1] not in ['sp', 'sil']])
 
 
-	def get_label(self, sentence):
+	def get_label(self, sentence: str) -> [chr]:
 		return text_to_labels(sentence)
 
 
 	# Returns an array that is of size absolute_max_string_len. Fills the left spaces with -1 in case the len(label) is less than absolute_max_string_len.
-	def get_padded_label(self, label):
+	def get_padded_label(self, label: [chr]) -> np.ndarray:
 		padding = np.ones((self.absolute_max_string_len - len(label))) * -1
 		return np.concatenate((np.array(label), padding), axis=0)
 

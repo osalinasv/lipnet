@@ -1,10 +1,8 @@
 import argparse
 import dlib
-import numpy as np
 import os
-import sys
 
-from colorama import init, Back, Fore, Style
+from colorama import init, Fore, Style
 from common.files import is_dir, is_file, get_file_extension
 
 
@@ -27,7 +25,7 @@ def extract_to_npy(videos_path: str, output_path: str, predictor_path: str, patt
 	videos_failed = []
 	had_errors = False
 
-	VIDEOS_FAILED_PATH  = os.path.join(output_path, 'videos_failed.log')
+	VIDEOS_FAILED_PATH = os.path.join(output_path, 'videos_failed.log')
 
 	if is_file(VIDEOS_FAILED_PATH):
 		with open(VIDEOS_FAILED_PATH, 'r+') as f:

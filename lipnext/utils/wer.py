@@ -2,7 +2,7 @@
 # Source: https://martin-thoma.com/word-error-rate-calculation/
 
 
-def wer(r, h):
+def wer(r: list, h: list) -> int:
 	"""
 	Calculation of WER with Levenshtein distance.
 

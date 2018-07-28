@@ -6,7 +6,7 @@ import os
 import skvideo
 
 from colorama import init, Fore
-from common.files import is_file, is_video, get_file_extension
+from common.files import is_file, get_file_extension
 
 
 init(autoreset=True)

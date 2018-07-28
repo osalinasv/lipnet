@@ -1,6 +1,6 @@
 import numpy as np
 
-from common.files import get_file_name, get_files_in_dir
+from common.files import get_file_name
 from lipnext.helpers.video import get_video_data_from_file
 from keras.utils import Sequence
 

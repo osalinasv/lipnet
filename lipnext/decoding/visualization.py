@@ -1,3 +1,5 @@
+import numpy as np
+
 from matplotlib import pyplot as plt
 from matplotlib import patheffects as path_effects
 
@@ -5,7 +7,7 @@ from matplotlib import patheffects as path_effects
 FRAME_RATE = 1 / 25
 
 
-def visualize_video_subtitle(video_frames, subtitle):
+def visualize_video_subtitle(video_frames: np.ndarray, subtitle: str):
 	_, ax = plt.subplots()
 
 	text = plt.text(0.5, 0.1, "", ha='center', va='center', transform=ax.transAxes,

@@ -1,5 +1,4 @@
 import cv2
-import dlib
 import env
 import numpy as np
 import operator
@@ -86,7 +85,7 @@ def crop_image(image: np.ndarray, center: tuple, size: tuple) -> np.ndarray:
 	return image[slices]
 
 
-def swap_center_axis(t: tuple) -> tuple:
+def swap_center_axis(t: np.ndarray) -> tuple:
 	return t[1], t[0]
 
 

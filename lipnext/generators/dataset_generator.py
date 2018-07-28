@@ -26,12 +26,6 @@ class DatasetGenerator(object):
 	def build_dataset(self):
 		cache_path = self.dataset_path.rstrip('/') + '.cache'
 
-		train_videos = []
-		train_aligns = {}
-
-		val_videos   = []
-		val_aligns   = {}
-
 		if self.use_cache and is_file(cache_path):
 			print('\nLoading dataset list from cache...\n')
 
