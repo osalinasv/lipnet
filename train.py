@@ -22,11 +22,15 @@ def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame
 	from lipnext.model.v2 import Lipnext
 	from lipnext.generators.dataset_generator import DatasetGenerator
 
+	print("\nTRAINING\n")
+
+	print("Running: {}\n".format(run_name))
+
+	print('For dataset at: {}'.format(dataset_path))
+	print('With aligns at: {}'.format(aligns_path))
+
 	make_dir_if_not_exists(OUTPUT_DIR)
 	make_dir_if_not_exists(LOG_DIR)
-
-	print("\nTRAINING")
-	print("Running: {}".format(run_name))
 
 	CHECKPOINT_DIR = os.path.join(OUTPUT_DIR, run_name)
 	make_dir_if_not_exists(CHECKPOINT_DIR)
