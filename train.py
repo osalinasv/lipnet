@@ -7,6 +7,7 @@ from colorama import init, Fore
 from common.files import is_dir
 
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 init(autoreset=True)
 
 
@@ -19,7 +20,7 @@ LOG_DIR    = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'logs'))
 def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int, batch_size: int, val_split: float, use_cache: bool):
 	from common.files import make_dir_if_not_exists
 	from keras.callbacks import ModelCheckpoint, TensorBoard
-	from lipnext.model.v2 import Lipnext
+	from lipnext.model.v4 import Lipnext
 	from lipnext.generators.dataset_generator import DatasetGenerator
 
 	print("\nTRAINING\n")

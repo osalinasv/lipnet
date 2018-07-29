@@ -22,7 +22,13 @@ total_average_size = sum([x[2] for x in dir_list]) / len(dir_list)
 ta_small_p  = total_average_size * 0.05
 ta_big_p    = total_average_size * 0.1
 
+total_groups = 0
+total_videos = 0
+
 for p, fc, a in dir_list:
+	total_groups += 1
+	total_videos += fc
+
 	average_size_int = int(round(a))
 	average_size_str = '{} KB'.format(average_size_int) + Style.RESET_ALL
 
@@ -34,3 +40,5 @@ for p, fc, a in dir_list:
 		average_size_str = Fore.RED + average_size_str
 
 	print('{}\t => {} files, {} average size'.format(p, fc, average_size_str))
+
+print('\nGROUPS: {}\tVIDEOS: {}'.format(total_groups, total_videos))

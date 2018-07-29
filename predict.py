@@ -9,6 +9,7 @@ from colorama import init, Fore
 from common.files import is_file, get_file_extension
 
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 init(autoreset=True)
 
 
@@ -26,7 +27,7 @@ def predict(weights_file_path: str, video_file_path: str, predictor_path: str, f
 	from lipnext.decoding.spell import Spell
 	from lipnext.decoding.visualization import visualize_video_subtitle
 	from lipnext.helpers.video import reshape_and_normalize_video_data
-	from lipnext.model.v2 import Lipnext
+	from lipnext.model.v4 import Lipnext
 	from lipnext.utils.labels import labels_to_text
 	from preprocessing.extractor.extract_roi import extract_video_data
 
