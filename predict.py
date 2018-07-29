@@ -3,7 +3,7 @@ import dlib
 import env
 import numpy as np
 import os
-import skvideo
+import skvideo.io
 
 from colorama import init, Fore
 from common.files import is_file, get_file_extension

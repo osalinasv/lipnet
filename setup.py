@@ -20,9 +20,8 @@ setup(
 		'Pillow==5.1.0',
 		'python-dotenv==0.8.2',
 		'progress==1.4',
-		'scikit-image==0.14.0',
-		'scikit-video==1.1.10',
 		'scipy==1.1.0',
+		'sk-video==1.1.10',
 		'tensorflow-gpu==1.9.0'
 	]
 )
