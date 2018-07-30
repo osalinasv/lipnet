@@ -15,6 +15,7 @@ def extract_to_npy(videos_path: str, output_path: str, predictor_path: str, patt
 	from common.files import get_files_in_dir, get_file_name, make_dir_if_not_exists
 	from preprocessing.extractor.extract_roi import video_to_frames
 
+
 	print('\nEXTRACT\n')
 
 	print('Searching for files in: {}'.format(videos_path))

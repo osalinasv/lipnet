@@ -23,6 +23,7 @@ def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame
 	from lipnext.model.v4 import Lipnext
 	from lipnext.generators.dataset_generator import DatasetGenerator
 
+
 	print("\nTRAINING\n")
 
 	print("Running: {}\n".format(run_name))

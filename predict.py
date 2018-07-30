@@ -6,7 +6,9 @@ import os
 import skvideo.io
 
 from colorama import init, Fore
-from common.files import is_file, get_file_extension
+from common.files import is_dir, is_file, get_file_extension, get_files_in_dir, walk_level
+from lipnext.helpers.video import reshape_and_normalize_video_data
+from preprocessing.extractor.extract_roi import extract_video_data
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -20,53 +22,82 @@ DECODER_BEAM_WIDTH = 200
 
 
 # set PYTHONPATH=%PYTHONPATH%;./
-# python predict.py -w data\results\2018-07-27-22-22-14\w-0002-31.14.hdf5 -v D:\GRID\s34\sbwe6a.mpg
-# set blue with e six again
-def predict(weights_file_path: str, video_file_path: str, predictor_path: str, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int):
+# python predict.py -w data\results\2018-07-29-15-47-26\w-0060-3.46.hdf5 -v data\unseen\s1\bbaf2n.mpg
+# bin blue at f two now
+# 
+# python predict.py -w data\results\2018-07-29-15-47-26\w-0060-3.46.hdf5 -v data\unseen\s1\
+def predict(weights_file_path: str, video_path: str, predictor_path: str, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int):
 	from lipnext.decoding.decoder import Decoder
 	from lipnext.decoding.spell import Spell
-	from lipnext.decoding.visualization import visualize_video_subtitle
-	from lipnext.helpers.video import reshape_and_normalize_video_data
 	from lipnext.model.v4 import Lipnext
 	from lipnext.utils.labels import labels_to_text
-	from preprocessing.extractor.extract_roi import extract_video_data
-
+	
+	
 	print("\nPREDICTION\n")
 
-	print('Predicting for video at: {}'.format(video_file_path))
+	video_path_is_file = is_file(video_path) and not is_dir(video_path)
+
+	if video_path_is_file:
+		print('Predicting for video at: {}'.format(video_path))
+		video_paths = [video_path]
+	else:
+		print('Predicting batch at:     {}'.format(video_path))
+		video_paths = get_video_files_in_dir(video_path)
+
 	print('Loading weights at:      {}'.format(weights_file_path))
-	print('Using predictor at:      {}'.format(predictor_path))
+	print('Using predictor at:      {}\n'.format(predictor_path))
 
 	detector  = dlib.get_frontal_face_detector()
 	predictor = dlib.shape_predictor(predictor_path)
 
-	video_data = extract_video_data(video_file_path, detector, predictor)
-	video_data = reshape_and_normalize_video_data(video_data)
+	print('\nExtracting input video data...')
 
-	print()
+	input_data = list(map(lambda x: (x, path_to_video_data(x, detector, predictor)), video_paths))
+	input_data = list(filter(lambda x: x[1] is not None, input_data))
+
+	if len(input_data) <= 0:
+		print(Fore.RED + '\nNo valid video files were found, exiting.')
+		return
+
+	print('\nMaking predictions...')
 
 	lipnext = Lipnext(frame_count, image_channels, image_height, image_width, max_string)
 	lipnext.compile_model()
 
 	lipnext.model.load_weights(weights_file_path)
 
-	x_data = np.array([video_data])
+	x_data = np.array([x[1] for x in input_data])
 	y_pred = lipnext.predict(x_data)
 
-	input_length = np.array([len(video_data)])
-
 	spell   = Spell(DICTIONARY_PATH)
-	decoder = Decoder(greedy=DECODER_GREEDY, beam_width=DECODER_BEAM_WIDTH,
-		postprocessors=[labels_to_text, spell.sentence])
+	decoder = Decoder(greedy=DECODER_GREEDY, beam_width=DECODER_BEAM_WIDTH, postprocessors=[labels_to_text, spell.sentence])
 
-	result = decoder.decode(y_pred, input_length)[0]
+	input_length = np.array([len(x) for x in x_data])
+	results = decoder.decode(y_pred, input_length)
 
-	print('\ny_pred shape:   {}'.format(y_pred.shape))
-	print('decoded result: {}'.format(result))
+	print('\n\nRESULTS:')
 
-	print('\nPreparing visualization...')
-	original_video_data = skvideo.io.vread(video_file_path)
-	visualize_video_subtitle(original_video_data, result)
+	for (i, _), s, r in zip(input_data, y_pred, results):
+		print('\nVideo: {}\n   Shape:  {}\n   Result: {}'.format(i, s.shape, r))
+
+
+def get_video_files_in_dir(path: str) -> [str]:
+	video_paths = []
+
+	for sub_dir, _, _ in walk_level(path):
+		video_paths += [f for f in get_files_in_dir(sub_dir, '*.mpg')]
+
+	return video_paths
+
+
+def path_to_video_data(path: str, detector, predictor) -> np.ndarray:
+	data = extract_video_data(path, detector, predictor)
+
+	if data is not None:
+		data = reshape_and_normalize_video_data(data)
+		return data
+	else:
+		return None
 
 
 def main():
@@ -81,7 +112,7 @@ def main():
 	ap = argparse.ArgumentParser()
 
 	ap.add_argument('-v', '--video-path', required=True,
-		help='Path to video file to analize')
+		help='Path to video file or batch directory to analize')
 
 	ap.add_argument('-w', '--weights-path', required=True,
 		help='Path to .hdf5 trained weights file')
@@ -101,8 +132,8 @@ def main():
 		print(Fore.RED + '\nERROR: Trained weights path is not a valid file')
 		return
 
-	if not is_file(video):
-		print(Fore.RED + '\nERROR: Video file path is not valid')
+	if not is_file(video) and not is_dir(video):
+		print(Fore.RED + '\nERROR: Path does not point to a video file nor to a directory')
 		return
 
 	if not is_file(predictor_path) or get_file_extension(predictor_path) != '.dat':
