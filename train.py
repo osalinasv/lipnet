@@ -19,7 +19,7 @@ LOG_DIR    = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'logs'))
 # python train.py -d data/dataset -a D:/GRID/align/ -e 10
 def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int, batch_size: int, val_split: float, use_cache: bool):
 	from common.files import make_dir_if_not_exists
-	from keras.callbacks import ModelCheckpoint, TensorBoard
+	from keras.callbacks import CSVLogger, ModelCheckpoint, TensorBoard
 	from lipnext.model.v4 import Lipnext
 	from lipnext.generators.dataset_generator import DatasetGenerator
 
@@ -34,11 +34,15 @@ def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame
 	make_dir_if_not_exists(OUTPUT_DIR)
 	make_dir_if_not_exists(LOG_DIR)
 
-	CHECKPOINT_DIR = os.path.join(OUTPUT_DIR, run_name)
-	make_dir_if_not_exists(CHECKPOINT_DIR)
+	checkpoint_dir = os.path.join(OUTPUT_DIR, run_name)
+	make_dir_if_not_exists(checkpoint_dir)
 
-	tensorboard = TensorBoard(log_dir=os.path.join(LOG_DIR, run_name))
-	checkpoint  = ModelCheckpoint(os.path.join(CHECKPOINT_DIR, "w-{epoch:04d}-{val_loss:.2f}.hdf5"), monitor='val_loss', save_weights_only=True, mode='auto', period=1, verbose=1, save_best_only=True)
+	run_log_dir = os.path.join(LOG_DIR, run_name)
+	csv_log_dir = os.path.join(run_log_dir, '{}_train.csv'.format(run_name))
+
+	tensorboard = TensorBoard(log_dir=run_log_dir)
+	csv_logger  = CSVLogger(csv_log_dir, separator=',', append=True)
+	checkpoint  = ModelCheckpoint(os.path.join(checkpoint_dir, "w_{epoch:04d}_{val_loss:.2f}.hdf5"), monitor='val_loss', save_weights_only=True, mode='auto', period=1, verbose=1, save_best_only=True)
 
 	lipnext = Lipnext(frame_count, image_channels, image_height, image_width, max_string)
 	lipnext.compile_model()
@@ -54,7 +58,7 @@ def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame
 		max_queue_size  = 10,
 		use_multiprocessing = True,
 		workers         = 2,
-		callbacks       = [checkpoint, tensorboard]
+		callbacks       = [checkpoint, tensorboard, csv_logger]
 	)
 
 
