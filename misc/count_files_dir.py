@@ -39,6 +39,6 @@ for p, fc, a in dir_list:
 	elif diff >= ta_small_p:
 		average_size_str = Fore.RED + average_size_str
 
-	print('{}\t => {} files, {} average size'.format(p, fc, average_size_str))
+	print('{}\t => {} files\t{} average size'.format(p, fc, average_size_str))
 
 print('\nGROUPS: {}\tVIDEOS: {}'.format(total_groups, total_videos))

@@ -74,7 +74,7 @@ class DatasetGenerator(object):
 
 		for group in groups:
 			group_len    = len(group)
-			val_amount   = int(round(group_len * val_split))
+			val_amount   = int(group_len * val_split)
 
 			train_list += group[val_amount:]
 			val_list   += group[:val_amount]
