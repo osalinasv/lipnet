@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 from common.files import get_file_name
 from lipnext.helpers.video import get_video_data_from_file
@@ -13,20 +14,26 @@ class BatchGenerator(Sequence):
 		self.batch_size  = batch_size
 
 		self.videos_len = len(self.video_paths)
+		self.videos_per_batch = int(np.ceil(self.batch_size / 2))
+
+		self.generator_steps = int(np.ceil(self.videos_len / self.videos_per_batch))
 
 
 	def __len__(self) -> int:
-		return int(np.ceil(self.videos_len / float(self.batch_size)))
+		return self.generator_steps
 
 
 	def __getitem__(self, idx: int) -> (dict, dict):
-		split_start = idx * self.batch_size
-		split_end   = split_start + self.batch_size
+		split_start = idx * self.videos_per_batch
+		split_end   = split_start + self.videos_per_batch
 
 		if split_end > self.videos_len:
 			split_end = self.videos_len
 
 		videos_batch = self.video_paths[split_start:split_end]
+		videos_taken = len(videos_batch)
+
+		videos_to_augment = self.batch_size - videos_taken
 
 		x_data = []
 		y_data = []
@@ -41,6 +48,18 @@ class BatchGenerator(Sequence):
 			label_length.append(label_len)
 			input_length.append(len(video_data))
 
+			if videos_to_augment > 0:
+				videos_to_augment -= 1
+
+				f_video_data = self.flip_video(video_data)
+
+				x_data.append(f_video_data)
+				y_data.append(label)
+				label_length.append(label_len)
+				input_length.append(len(f_video_data))
+
+		random.shuffle(x_data)
+		
 		x_data = np.array(x_data)
 		y_data = np.array(y_data)
 		input_length = np.array(input_length)
