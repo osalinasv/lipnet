@@ -45,5 +45,5 @@ class Align(object):
 
 
 	@property
-	def label_length(self):
+	def label_length(self) -> int:
 		return len(self.label)
