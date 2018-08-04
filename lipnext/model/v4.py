@@ -1,9 +1,14 @@
-import lipnext.model.layers as layers
 import env
+import lipnext.model.layers as layers
+import os
+import sys
 
+stderr = sys.stderr
+sys.stderr = open(os.devnull, 'w') # Patch to remove "Using TensorFlow backend" output
 from keras import backend as k
 from keras.models import Model
 from keras.optimizers import Adam
+sys.stderr = stderr # Patch to remove "Using TensorFlow backend" output
 
 
 ADAM_LEARN_RATE = 0.0001

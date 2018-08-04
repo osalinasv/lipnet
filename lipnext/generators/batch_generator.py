@@ -1,9 +1,15 @@
 import numpy as np
+import os
 import random
+import sys
 
 from common.files import get_file_name
 from lipnext.helpers.video import get_video_data_from_file
+
+stderr = sys.stderr
+sys.stderr = open(os.devnull, 'w') # Patch to remove "Using TensorFlow backend" output
 from keras.utils import Sequence
+sys.stderr = stderr # Patch to remove "Using TensorFlow backend" output
 
 
 class BatchGenerator(Sequence):

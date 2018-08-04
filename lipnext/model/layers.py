@@ -1,3 +1,8 @@
+import os
+import sys
+
+stderr = sys.stderr
+sys.stderr = open(os.devnull, 'w') # Patch to remove "Using TensorFlow backend" output
 from keras import backend as k
 from keras.layers import Input
 from keras.layers.core import Activation, Dense, Flatten, Lambda, SpatialDropout3D
@@ -6,6 +11,7 @@ from keras.layers.normalization import BatchNormalization
 from keras.layers.pooling import MaxPooling3D
 from keras.layers.recurrent import GRU
 from keras.layers.wrappers import Bidirectional, TimeDistributed
+sys.stderr = stderr # Patch to remove "Using TensorFlow backend" output
 
 
 INPUT_TYPE = 'float32'
@@ -68,7 +74,6 @@ def create_dense_layer(name: str, input_layer, output_size, kernel_initializer=C
 
 def ctc_lambda_func(args):
 	y_pred, labels, input_length, label_length = args
-	# y_pred = y_pred[:, 2:, :]
 	y_pred = y_pred[:, :, :]
 
 	return k.ctc_batch_cost(labels, y_pred, input_length, label_length)

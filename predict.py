@@ -11,7 +11,7 @@ from lipnext.helpers.video import reshape_and_normalize_video_data
 from preprocessing.extractor.extract_roi import extract_video_data
 
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 init(autoreset=True)
 
 
