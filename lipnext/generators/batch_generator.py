@@ -67,6 +67,8 @@ class BatchGenerator(Sequence):
 		random.shuffle(x_data)
 		
 		x_data = np.array(x_data)
+		x_data = (x_data - np.mean(x_data, axis=(2, 3), keepdims=True)) / np.std(x_data, axis=(2, 3), keepdims=True)
+
 		y_data = np.array(y_data)
 		input_length = np.array(input_length)
 		label_length = np.array(label_length)

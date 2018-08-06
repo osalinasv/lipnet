@@ -42,8 +42,8 @@ Windows:
 
 ## To-do List
 
-- [ ] RGB normalization: Apply per-batch zero mean standardization
-- [ ] Augmentation: Make generators also output the horizontal flip of each video
+- [x] RGB standardization: Apply per-batch zero mean standardization
+- [x] Augmentation: Make generators also output the horizontal flip of each video
 - [ ] Statistics: Record per-epoch statistics and other useful data visualizations.
 - [ ] Documentation: Proper usage and code documentation
 - [ ] Testing: Develop unit testing

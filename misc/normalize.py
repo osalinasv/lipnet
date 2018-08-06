@@ -48,7 +48,7 @@ print('loaded shape: {}'.format(batch.shape))
 # 3rd Option. Standard deviation normalization
 # (x - x.mean()) / x.std() # values from ? to ?, but mean at 0
 
-batch = (batch - np.mean(batch)) / np.std(batch)
+batch = (batch - np.mean(batch, axis=(2, 3), keepdims=True)) / np.std(batch, axis=(2, 3), keepdims=True)
 
 # displaying
 
