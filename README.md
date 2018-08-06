@@ -58,7 +58,7 @@ Windows:
 * **Omar Salinas** - [omarsalinas16](https://github.com/omarsalinas16)
 * **Eduardo Delgado** - [lalona](https://github.com/lalona)
 
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/omarsalinas16/lipnext/contributors) who participated in this project.
 
 ## License
 

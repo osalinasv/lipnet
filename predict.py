@@ -22,10 +22,8 @@ DECODER_BEAM_WIDTH = 200
 
 
 # set PYTHONPATH=%PYTHONPATH%;./
-# python predict.py -w data\results\2018-07-29-15-47-26\w-0060-3.46.hdf5 -v data\unseen\s1\bbaf2n.mpg
+# python predict.py -w data\results\2018-07-31-20-09-20\w_0115_2.19.hdf5 -v D:\GRID\s1\bbaf2n.mpg
 # bin blue at f two now
-# 
-# python predict.py -w data\results\2018-07-29-15-47-26\w-0060-3.46.hdf5 -v data\unseen\s1\
 def predict(weights_file_path: str, video_path: str, predictor_path: str, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int):
 	from lipnext.decoding.decoder import Decoder
 	from lipnext.decoding.spell import Spell
