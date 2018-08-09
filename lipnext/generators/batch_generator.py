@@ -1,15 +1,8 @@
 import numpy as np
-import os
-import random
-import sys
 
 from common.files import get_file_name
 from lipnext.helpers.video import get_video_data_from_file
-
-stderr = sys.stderr
-sys.stderr = open(os.devnull, 'w') # Patch to remove "Using TensorFlow backend" output
 from keras.utils import Sequence
-sys.stderr = stderr # Patch to remove "Using TensorFlow backend" output
 
 
 class BatchGenerator(Sequence):
@@ -20,7 +13,8 @@ class BatchGenerator(Sequence):
 		self.batch_size  = batch_size
 
 		self.videos_len = len(self.video_paths)
-		self.videos_per_batch = int(np.ceil(self.batch_size / 2))
+		self.videos_per_batch = self.batch_size
+		# self.videos_per_batch = int(np.ceil(self.batch_size / 2))
 
 		self.generator_steps = int(np.ceil(self.videos_len / self.videos_per_batch))
 
@@ -37,9 +31,9 @@ class BatchGenerator(Sequence):
 			split_end = self.videos_len
 
 		videos_batch = self.video_paths[split_start:split_end]
-		videos_taken = len(videos_batch)
+		# videos_taken = len(videos_batch)
 
-		videos_to_augment = self.batch_size - videos_taken
+		# videos_to_augment = self.batch_size - videos_taken
 
 		x_data = []
 		y_data = []
@@ -54,20 +48,24 @@ class BatchGenerator(Sequence):
 			label_length.append(label_len)
 			input_length.append(len(video_data))
 
-			if videos_to_augment > 0:
-				videos_to_augment -= 1
+			# Temporarily disabling video augmentation
+			# 
+			# if videos_to_augment > 0:
+			# 	videos_to_augment -= 1
 
-				f_video_data = self.flip_video(video_data)
+			# 	f_video_data = self.flip_video(video_data)
 
-				x_data.append(f_video_data)
-				y_data.append(label)
-				label_length.append(label_len)
-				input_length.append(len(f_video_data))
+			# 	x_data.append(f_video_data)
+			# 	y_data.append(label)
+			# 	label_length.append(label_len)
+			# 	input_length.append(len(f_video_data))
 
-		random.shuffle(x_data)
+		# random.shuffle(x_data)
 		
 		x_data = np.array(x_data)
-		x_data = (x_data - np.mean(x_data, axis=(2, 3), keepdims=True)) / np.std(x_data, axis=(2, 3), keepdims=True)
+		# Batch standardization appears to be causing more problems than improvements.
+		# 
+		# x_data = (x_data - np.mean(x_data)) / np.std(x_data)
 
 		y_data = np.array(y_data)
 		input_length = np.array(input_length)

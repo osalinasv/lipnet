@@ -1,8 +1,3 @@
-import os
-import sys
-
-stderr = sys.stderr
-sys.stderr = open(os.devnull, 'w') # Patch to remove "Using TensorFlow backend" output
 from keras import backend as k
 from keras.layers import Input
 from keras.layers.core import Activation, Dense, Flatten, Lambda, SpatialDropout3D
@@ -11,7 +6,6 @@ from keras.layers.normalization import BatchNormalization
 from keras.layers.pooling import MaxPooling3D
 from keras.layers.recurrent import GRU
 from keras.layers.wrappers import Bidirectional, TimeDistributed
-sys.stderr = stderr # Patch to remove "Using TensorFlow backend" output
 
 
 INPUT_TYPE = 'float32'

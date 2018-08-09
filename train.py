@@ -2,7 +2,6 @@ import argparse
 import datetime
 import env
 import os
-import sys
 
 from colorama import init, Fore
 from common.files import is_dir
@@ -20,12 +19,7 @@ LOG_DIR    = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'logs'))
 # python train.py -d data/dataset -a D:/GRID/aligns/ -e 1
 def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int, batch_size: int, val_split: float, use_cache: bool):
 	from common.files import make_dir_if_not_exists
-
-	stderr = sys.stderr
-	sys.stderr = open(os.devnull, 'w') # Patch to remove "Using TensorFlow backend" output
 	from keras.callbacks import CSVLogger, ModelCheckpoint, TensorBoard
-	sys.stderr = stderr # Patch to remove "Using TensorFlow backend" output
-
 	from lipnext.model.v4 import Lipnext
 	from lipnext.generators.dataset_generator import DatasetGenerator
 

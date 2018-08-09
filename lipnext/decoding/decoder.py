@@ -1,11 +1,6 @@
 import numpy as np
-import os
-import sys
 
-stderr = sys.stderr
-sys.stderr = open(os.devnull, 'w') # Patch to remove "Using TensorFlow backend" output
 from keras import backend as k
-sys.stderr = stderr # Patch to remove "Using TensorFlow backend" output
 
 
 class Decoder(object):

@@ -1,5 +1,5 @@
-import lipnext.model.layers as layers
 import env
+import lipnext.model.layers as layers
 
 from keras import backend as k
 from keras.models import Model
