@@ -13,7 +13,7 @@ init(autoreset=True)
 # python preprocessing\extract.py -v D:\GRID\ -o data\dataset -lv 840
 def extract_to_npy(videos_path: str, output_path: str, predictor_path: str, pattern: str, first_video: int, last_video: int):
 	from common.files import get_files_in_dir, get_file_name, make_dir_if_not_exists
-	from preprocessing.extractor.extract_roi import video_to_frames
+	from preprocessing.extract_roi import video_to_frames
 
 
 	print('\nEXTRACT\n')

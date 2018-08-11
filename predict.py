@@ -8,7 +8,7 @@ import skvideo.io
 from colorama import init, Fore
 from common.files import is_dir, is_file, get_file_extension, get_files_in_dir, walk_level
 from lipnext.helpers.video import reshape_and_normalize_video_data
-from preprocessing.extractor.extract_roi import extract_video_data
+from preprocessing.extract_roi import extract_video_data
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -27,7 +27,7 @@ DECODER_BEAM_WIDTH = 200
 def predict(weights_file_path: str, video_path: str, predictor_path: str, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int):
 	from lipnext.decoding.decoder import Decoder
 	from lipnext.decoding.spell import Spell
-	from lipnext.model.v4 import Lipnext
+	from lipnext.model.lipnext import Lipnext
 	from lipnext.utils.labels import labels_to_text
 	
 	
