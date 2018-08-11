@@ -5,7 +5,7 @@ from keras import backend as k
 
 class Decoder(object):
 
-	def __init__(self, greedy: bool = True, beam_width: int = 100, top_paths: int = 1, postprocessors: list = None):
+	def __init__(self, greedy: bool = True, beam_width: int = 200, top_paths: int = 1, postprocessors: list = None):
 		self.greedy         = greedy
 		self.beam_width     = beam_width
 		self.top_paths      = top_paths

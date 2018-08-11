@@ -9,7 +9,7 @@ class BatchGenerator(Sequence):
 
 	def __init__(self, video_paths: list, align_hash: dict, batch_size: int):
 		self.video_paths = video_paths
-		self.align_hash = align_hash
+		self.align_hash  = align_hash
 		self.batch_size  = batch_size
 
 		self.videos_len = len(self.video_paths)
@@ -49,7 +49,6 @@ class BatchGenerator(Sequence):
 			input_length.append(len(video_data))
 
 			# Temporarily disabling video augmentation
-			# 
 			# if videos_to_augment > 0:
 			# 	videos_to_augment -= 1
 
@@ -64,7 +63,6 @@ class BatchGenerator(Sequence):
 		
 		x_data = np.array(x_data)
 		# Batch standardization appears to be causing more problems than improvements.
-		# 
 		# x_data = (x_data - np.mean(x_data)) / np.std(x_data)
 
 		y_data = np.array(y_data)
@@ -84,7 +82,7 @@ class BatchGenerator(Sequence):
 		return inputs, outputs
 
 
-	def get_data_from_path(self, path: str) -> (np.ndarray, np.ndarray, int, int):
+	def get_data_from_path(self, path: str) -> (np.ndarray, np.ndarray, int):
 		video_data = get_video_data_from_file(path)
 		align_data = self.align_hash[get_file_name(path)]
 

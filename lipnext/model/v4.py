@@ -42,10 +42,11 @@ class Lipnext(object):
 		self.res = layers.create_timed_layer(self.drop_3)
 
 		self.gru_1 = layers.create_bi_gru_layer('gru_1', self.res)
-		self.gru_2 = layers.create_bi_gru_layer('gru_2', self.gru_1)
+		self.gru_1_actv = layers.create_actv_layer('gru_1_actv', self.gru_1)
+		self.gru_2 = layers.create_bi_gru_layer('gru_2', self.gru_1_actv)
+		self.gru_2_actv = layers.create_actv_layer('gru_2_actv', self.gru_2)
 
-		self.dense_1 = layers.create_dense_layer('dense_1', self.gru_2, output_size)
-
+		self.dense_1 = layers.create_dense_layer('dense_1', self.gru_2_actv, output_size)
 		self.y_pred = layers.create_actv_layer('softmax', self.dense_1, activation='softmax')
 
 		self.input_labels = layers.create_input_layer('labels', shape=[max_string])

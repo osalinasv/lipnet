@@ -12,7 +12,8 @@ INPUT_TYPE = 'float32'
 
 ZERO_PADDING = (1, 2, 2)
 
-CONV_ACTIVATION = 'relu'
+ACTIVATION_FN = 'relu'
+
 CONV_KERNEL_INIT = 'he_normal'
 CONV_KERNEL_SIZE = (3, 5, 5)
 CONV_STRIDES = (1, 2, 2)
@@ -22,8 +23,10 @@ POOL_STRIDES = (1, 2, 2)
 
 DROPOUT_RATE = 0.5
 
+GRU_ACTIVATION = None
+GRU_UNITS = 256
 GRU_KERNEL_INIT = 'Orthogonal'
-GRU_MERGE_MODE = 'concat'
+GRU_MERGE_MODE  = 'concat'
 
 
 def create_input_layer(name: str, shape, dtype: str = INPUT_TYPE) -> Input:
@@ -42,7 +45,7 @@ def create_batc_layer(name: str, input_layer) -> BatchNormalization:
 	return BatchNormalization(name=name)(input_layer)
 
 
-def create_actv_layer(name: str, input_layer, activation: str = CONV_ACTIVATION) -> Activation:
+def create_actv_layer(name: str, input_layer, activation: str = ACTIVATION_FN) -> Activation:
 	return Activation(activation, name=name)(input_layer)
 
 
@@ -54,8 +57,8 @@ def create_drop_layer(name: str, input_layer) -> SpatialDropout3D:
 	return SpatialDropout3D(DROPOUT_RATE, name=name)(input_layer)
 
 
-def create_bi_gru_layer(name: str, input_layer, units: int = 256) -> Bidirectional:
-	return Bidirectional(GRU(units, return_sequences=True, kernel_initializer=GRU_KERNEL_INIT, name=name), merge_mode='concat')(input_layer)
+def create_bi_gru_layer(name: str, input_layer, units: int = GRU_UNITS, activation: str = GRU_ACTIVATION) -> Bidirectional:
+	return Bidirectional(GRU(units, return_sequences=True, activation=activation, kernel_initializer=GRU_KERNEL_INIT, name=name), merge_mode='concat')(input_layer)
 
 
 def create_timed_layer(input_layer) -> TimeDistributed:
