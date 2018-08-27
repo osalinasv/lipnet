@@ -15,13 +15,21 @@ ROOT_PATH  = os.path.dirname(os.path.realpath(__file__))
 OUTPUT_DIR = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'results'))
 LOG_DIR    = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'logs'))
 
+DICTIONARY_PATH    = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'dictionaries', 'grid.txt'))
+DECODER_GREEDY     = False
+DECODER_BEAM_WIDTH = 200
+
 
 # python train.py -d data/dataset -a D:/GRID/aligns/ -e 1
 def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int, batch_size: int, val_split: float, use_cache: bool):
 	from common.files import make_dir_if_not_exists
 	from keras.callbacks import CSVLogger, ModelCheckpoint, TensorBoard
-	from lipnext.model.lipnext import Lipnext
+	from lipnext.callbacks.error_rate import ErrorRate
+	from lipnext.decoding.decoder import Decoder
+	from lipnext.decoding.spell import Spell
 	from lipnext.generators.dataset_generator import DatasetGenerator
+	from lipnext.model.lipnext import Lipnext
+	from lipnext.utils.labels import labels_to_text
 
 
 	print("\nTRAINING\n")
@@ -39,6 +47,7 @@ def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame
 
 	run_log_dir = os.path.join(LOG_DIR, run_name)
 	csv_log_dir = os.path.join(run_log_dir, '{}_train.csv'.format(run_name))
+	error_rate_log_dir = os.path.join(run_log_dir, '{}_error_rate.csv'.format(run_name))
 
 	tensorboard = TensorBoard(log_dir=run_log_dir)
 	csv_logger  = CSVLogger(csv_log_dir, separator=',', append=True)
@@ -48,6 +57,11 @@ def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame
 	lipnext.compile_model()
 
 	datagen = DatasetGenerator(dataset_path, aligns_path, batch_size, max_string, val_split, use_cache)
+
+	spell   = Spell(DICTIONARY_PATH)
+	decoder = Decoder(greedy=DECODER_GREEDY, beam_width=DECODER_BEAM_WIDTH, postprocessors=[labels_to_text, spell.sentence])
+
+	error_rate = ErrorRate(error_rate_log_dir, lipnext, datagen.val_generator, decoder)
 
 	print('\nStarting training...\n')
 
@@ -60,7 +74,7 @@ def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame
 		max_queue_size  = 10,
 		use_multiprocessing = True,
 		workers         = 2,
-		callbacks       = [checkpoint, tensorboard, csv_logger]
+		callbacks       = [checkpoint, tensorboard, csv_logger, error_rate]
 	)
 
 

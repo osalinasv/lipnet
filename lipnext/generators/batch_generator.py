@@ -39,14 +39,16 @@ class BatchGenerator(Sequence):
 		y_data = []
 		input_length = []
 		label_length = []
+		sentences = []
 
 		for path in videos_batch:
-			video_data, label, label_len = self.get_data_from_path(path)
+			video_data, label, label_len, sentence = self.get_data_from_path(path)
 
 			x_data.append(video_data)
 			y_data.append(label)
 			label_length.append(label_len)
 			input_length.append(len(video_data))
+			sentences.append(sentence)
 
 			# Temporarily disabling video augmentation
 			# if videos_to_augment > 0:
@@ -68,12 +70,14 @@ class BatchGenerator(Sequence):
 		y_data = np.array(y_data)
 		input_length = np.array(input_length)
 		label_length = np.array(label_length)
+		sentences    = np.array(sentences)
 
 		inputs = {
 			'input'       : x_data,
 			'labels'      : y_data,
 			'input_length': input_length,
 			'label_length': label_length,
+			'sentences'  : sentences
 		}
 
 		real_batch_size = len(x_data)
@@ -82,11 +86,11 @@ class BatchGenerator(Sequence):
 		return inputs, outputs
 
 
-	def get_data_from_path(self, path: str) -> (np.ndarray, np.ndarray, int):
+	def get_data_from_path(self, path: str) -> (np.ndarray, np.ndarray, int, str):
 		video_data = get_video_data_from_file(path)
 		align_data = self.align_hash[get_file_name(path)]
 
-		return video_data, align_data.padded_label, align_data.label_length
+		return video_data, align_data.padded_label, align_data.label_length, align_data.sentence
 
 
 	def flip_frame(self, frame: np.ndarray) -> np.ndarray:

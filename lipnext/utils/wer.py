@@ -50,3 +50,7 @@ def wer(r: list, h: list) -> int:
 				d[i][j] = min(substitution, insertion, deletion)
 
 	return d[len(r)][len(h)]
+
+
+def wer_sentence(r: str, h: str) -> int:
+	return wer(r.split(), h.split())

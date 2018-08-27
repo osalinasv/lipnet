@@ -11,6 +11,7 @@ setup(
 	install_requires = [
 		'colorama==0.3.9',
 		'dlib==19.15.0',
+		'editdistance==0.4',
 		'imutils==0.4.6',
 		'Keras==2.1.6',
 		'matplotlib==2.2.2',
