@@ -7,7 +7,7 @@ import skvideo.io
 
 from colorama import init, Fore
 from common.files import is_dir, is_file, get_file_extension, get_files_in_dir, walk_level
-from lipnext.helpers.video import reshape_and_normalize_video_data
+from lipnext.helpers.video import get_video_data_from_file, reshape_and_normalize_video_data
 from preprocessing.extract_roi import extract_video_data
 
 
@@ -22,13 +22,14 @@ DECODER_BEAM_WIDTH = 200
 
 
 # set PYTHONPATH=%PYTHONPATH%;./
-# python predict.py -w data\results\2018-08-11-21-08-41\w_0111_2.06.hdf5 -v D:\GRID\s1\bbaf2n.mpg
+# python predict.py -w data\results\2018-08-28-00-04-11\w_0107_2.15.hdf5 -v D:\GRID\s1\bbaf2n.mpg
 # bin blue at f two now
 def predict(weights_file_path: str, video_path: str, predictor_path: str, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int):
 	from lipnext.decoding.decoder import Decoder
 	from lipnext.decoding.spell import Spell
 	from lipnext.model.lipnext import Lipnext
 	from lipnext.utils.labels import labels_to_text
+	from lipnext.utils.visualization import visualize_video_subtitle
 	
 	
 	print("\nPREDICTION\n")
@@ -75,27 +76,34 @@ def predict(weights_file_path: str, video_path: str, predictor_path: str, frame_
 
 	print('\n\nRESULTS:')
 
-	for (i, _), s, r in zip(input_data, y_pred, results):
-		print('\nVideo: {}\n   Shape:  {}\n   Result: {}'.format(i, s.shape, r))
+	visualize_input  = input('Visualize results as video captions [y/N]? ')
+
+	if visualize_input and visualize_input.lower()[0] == 'y':
+		visualize_videos = True
+	else:
+		visualize_videos = False
+
+	for (i, v), r in zip(input_data, results):
+		print('\nVideo: {}\n    Result: {}'.format(i, r))
+
+		if visualize_videos:
+			visualize_video_subtitle(v, r)
 
 
 def get_video_files_in_dir(path: str) -> [str]:
-	video_paths = []
-
-	for sub_dir, _, _ in walk_level(path):
-		video_paths += [f for f in get_files_in_dir(sub_dir, '*.mpg')]
-
-	return video_paths
+	return [f for ext in ['*.mpg', '*.npy'] for f in get_files_in_dir(path, ext)]
 
 
 def path_to_video_data(path: str, detector, predictor) -> np.ndarray:
-	data = extract_video_data(path, detector, predictor)
+	if get_file_extension(path) == '.mpg':
+		data = extract_video_data(path, detector, predictor)
 
-	if data is not None:
-		data = reshape_and_normalize_video_data(data)
+		if data is not None:
+			data = reshape_and_normalize_video_data(data)
+
 		return data
 	else:
-		return None
+		return get_video_data_from_file(path)
 
 
 def main():
