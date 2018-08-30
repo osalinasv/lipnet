@@ -24,7 +24,7 @@ DECODER_BEAM_WIDTH = 200
 def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int, batch_size: int, val_split: float, use_cache: bool):
 	from common.files import make_dir_if_not_exists
 	from keras.callbacks import CSVLogger, ModelCheckpoint, TensorBoard
-	from lipnext.callbacks.error_rate import ErrorRate
+	from lipnext.callbacks.error_rates import ErrorRates
 	from lipnext.decoding.decoder import Decoder
 	from lipnext.decoding.spell import Spell
 	from lipnext.generators.dataset_generator import DatasetGenerator
@@ -51,7 +51,7 @@ def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame
 
 	tensorboard = TensorBoard(log_dir=run_log_dir)
 	csv_logger  = CSVLogger(csv_log_dir, separator=',', append=True)
-	checkpoint  = ModelCheckpoint(os.path.join(checkpoint_dir, "w_{epoch:04d}_{val_loss:.2f}.hdf5"), monitor='val_loss', save_weights_only=True, mode='auto', period=1, verbose=1, save_best_only=True)
+	checkpoint  = ModelCheckpoint(os.path.join(checkpoint_dir, "w_{epoch:04d}_{val_loss:.2f}.hdf5"), monitor='val_loss', save_weights_only=True, mode='auto', period=1, verbose=1)
 
 	lipnext = Lipnext(frame_count, image_channels, image_height, image_width, max_string)
 	lipnext.compile_model()
@@ -61,7 +61,7 @@ def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame
 	spell   = Spell(DICTIONARY_PATH)
 	decoder = Decoder(greedy=DECODER_GREEDY, beam_width=DECODER_BEAM_WIDTH, postprocessors=[labels_to_text, spell.sentence])
 
-	error_rate = ErrorRate(error_rate_log_dir, lipnext, datagen.val_generator, decoder)
+	error_rates = ErrorRates(error_rate_log_dir, lipnext, datagen.val_generator, decoder)
 
 	print('\nStarting training...\n')
 
@@ -74,7 +74,7 @@ def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame
 		max_queue_size  = 10,
 		use_multiprocessing = True,
 		workers         = 2,
-		callbacks       = [checkpoint, tensorboard, csv_logger, error_rate]
+		callbacks       = [checkpoint, tensorboard, csv_logger, error_rates]
 	)
 
 

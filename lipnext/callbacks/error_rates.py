@@ -12,7 +12,7 @@ from lipnext.decoding.decoder import Decoder
 from lipnext.utils.wer import wer_sentence
 
 
-class ErrorRate(Callback):
+class ErrorRates(Callback):
 
 	def __init__(self, output_path: str, lipnext: Lipnext, val_generator: Sequence, decoder: Decoder, samples: int = 256):
 		self.output_path = output_path
@@ -103,4 +103,11 @@ class ErrorRate(Callback):
 
 		with open(self.output_path, 'a') as f:
 			writer = csv.writer(f)
-			writer.writerow([epoch, statistics['samples'], '{:.5f}'.format(statistics['wer']), '{:.5f}'.format(statistics['wer_norm']), '{:.5f}'.format(statistics['cer']), '{:.5f}'.format(statistics['cer_norm'])])
+			writer.writerow([
+				epoch,
+				statistics['samples'],
+				statistics['wer'],
+				statistics['wer_norm'],
+				statistics['cer'],
+				statistics['cer_norm']
+			])
