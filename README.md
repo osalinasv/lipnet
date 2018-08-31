@@ -44,7 +44,7 @@ Windows:
 
 - [x] RGB standardization: Apply per-batch zero mean standardization
 - [x] Augmentation: Make generators also output the horizontal flip of each video
-- [ ] Statistics: Record per-epoch statistics and other useful data visualizations.
+- [x] Statistics: Record per-epoch statistics and other useful data visualizations.
 - [ ] Documentation: Proper usage and code documentation
 - [ ] Testing: Develop unit testing
 
@@ -53,10 +53,9 @@ Windows:
 * [Python](https://www.python.org/) - The programming language
 * [Keras](https://keras.io/) - The high-level neural network API
 
-## Authors
+## Author
 
 * **Omar Salinas** - [omarsalinas16](https://github.com/omarsalinas16)
-* **Eduardo Delgado** - [lalona](https://github.com/lalona)
 
 See also the list of [contributors](https://github.com/omarsalinas16/lipnext/contributors) who participated in this project.
 
