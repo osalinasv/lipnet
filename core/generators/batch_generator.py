@@ -1,7 +1,7 @@
 import numpy as np
 
 from common.files import get_file_name
-from lipnext.helpers.video import get_video_data_from_file
+from core.helpers.video import get_video_data_from_file
 from keras.utils import Sequence
 
 

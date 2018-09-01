@@ -1,6 +1,6 @@
 import numpy as np
 
-from lipnext.utils.labels import text_to_labels
+from core.utils.labels import text_to_labels
 
 
 class Align(object):

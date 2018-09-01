@@ -1,3 +1,4 @@
+import argparse
 import csv
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -5,11 +6,15 @@ import numpy as np
 import os
 import sys
 
+from colorama import init, Fore
 from common.files import is_file, get_file_extension
 
 
+init(autoreset=True)
+
+
 # set PYTHONPATH=%PYTHONPATH%;./
-# python misc\graph_error_rates.py data\logs\2018-08-28-00-04-11\2018-08-28-00-04-11_error_rate.csv
+# python misc\graph_error_rates.py -i data\logs\2018-08-28-00-04-11\2018-08-28-00-04-11_error_rate.csv
 
 # These are the "Tableau 20" colors as RGB.
 tableau20 = [
@@ -29,10 +34,6 @@ tableau20 = list(map(norm_color, tableau20))
 
 def get_data(path: str) -> (np.ndarray, np.ndarray):
 	print('CSV file: {}'.format(path))
-
-	if not is_file(path) or get_file_extension(path) != '.csv':
-		print('No valid CSV file found')
-		return
 
 	with open(path, mode='r') as f:
 		reader = csv.DictReader(f, delimiter=',')
@@ -145,8 +146,35 @@ def graph_percents(wer: np.ndarray, cer: np.ndarray):
 
 
 def main():
-	csv_file_path = os.path.realpath(sys.argv[1])
-	data = get_data(csv_file_path)
+	print('LipNext Error Rate graphicator\n')
+
+	ap = argparse.ArgumentParser()
+
+	ap.add_argument('-i', '--input-path', required=True,
+		help='Path to the error rates log CSV file')
+
+	ap.add_argument('-o', '--output-path', required=False,
+		help='Path to where the output will be saved', default=None)
+
+	args = vars(ap.parse_args())
+
+	input_path = os.path.realpath(args['input_path'])
+
+	if not is_file(input_path) or get_file_extension(input_path) != '.csv':
+		print(Fore.RED + '\nERROR: Input path is not a CSV file')
+		return
+
+	output_arg = args['output_path']
+
+	if output_arg is None:
+		current_dir = os.path.dirname(os.path.realpath(__file__))
+		csv_name = os.path.splitext(os.path.basename(input_path))[0]
+
+		output_path = '{}_graph.png'.format(os.path.join(current_dir, csv_name))
+	else:
+		output_path = os.path.realpath(output_arg)
+
+	data = get_data(input_path)
 
 	# You typically want your plot to be ~1.33x wider than tall. This plot is a rare    
 	# exception because of the number of lines being plotted on it.    
@@ -158,14 +186,9 @@ def main():
 
 	plt.subplots_adjust(hspace=0.5)
 
-	plt.text(0, -25,
+	plt.text(0, -32,
 		"Autor: Omar Adrian Salinas Villanueva\n"
 		"Universidad Autónoma de Ciudad Juárez", fontsize=8, alpha=0.6)
-
-	current_dir = os.path.dirname(os.path.realpath(__file__))
-	csv_name = os.path.splitext(os.path.basename(csv_file_path))[0]
-
-	output_path = '{}_graph.png'.format(os.path.join(current_dir, csv_name))
 
 	plt.savefig(output_path, bbox_inches="tight")
 	print('Saved output to: {}'.format(output_path))

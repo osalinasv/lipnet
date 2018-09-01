@@ -7,9 +7,9 @@ from common.files import make_dir_if_not_exists
 from functools import reduce
 from keras.callbacks import Callback
 from keras.utils import Sequence
-from lipnext.model.lipnext import Lipnext
-from lipnext.decoding.decoder import Decoder
-from lipnext.utils.wer import wer_sentence
+from core.model.lipnext import Lipnext
+from core.decoding.decoder import Decoder
+from core.utils.wer import wer_sentence
 
 
 class ErrorRates(Callback):

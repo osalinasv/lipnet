@@ -24,12 +24,12 @@ DECODER_BEAM_WIDTH = 200
 def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int, batch_size: int, val_split: float, use_cache: bool):
 	from common.files import make_dir_if_not_exists
 	from keras.callbacks import CSVLogger, ModelCheckpoint, TensorBoard
-	from lipnext.callbacks.error_rates import ErrorRates
-	from lipnext.decoding.decoder import Decoder
-	from lipnext.decoding.spell import Spell
-	from lipnext.generators.dataset_generator import DatasetGenerator
-	from lipnext.model.lipnext import Lipnext
-	from lipnext.utils.labels import labels_to_text
+	from core.callbacks.error_rates import ErrorRates
+	from core.decoding.decoder import Decoder
+	from core.decoding.spell import Spell
+	from core.generators.dataset_generator import DatasetGenerator
+	from core.model.lipnext import Lipnext
+	from core.utils.labels import labels_to_text
 
 
 	print("\nTRAINING\n")

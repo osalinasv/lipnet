@@ -3,8 +3,8 @@ import pickle
 import random
 
 from common.files import is_file, get_files_in_dir, get_file_name, walk_level
-from lipnext.helpers.align import Align
-from lipnext.generators.batch_generator import BatchGenerator
+from core.helpers.align import Align
+from core.generators.batch_generator import BatchGenerator
 
 
 class DatasetGenerator(object):
