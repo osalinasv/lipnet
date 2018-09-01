@@ -1,4 +1,5 @@
 import argparse
+import csv
 import dlib
 import env
 import numpy as np
@@ -22,7 +23,7 @@ DECODER_BEAM_WIDTH = 200
 
 
 # set PYTHONPATH=%PYTHONPATH%;./
-# python predict.py -w data\results\2018-08-28-00-04-11\w_0107_2.15.hdf5 -v data/eval_videos
+# python predict.py -w data\results\2018-08-28-00-04-11\w_0107_2.15.hdf5 -v data/dataset_eval
 # bin blue at f two now
 def predict(weights_file_path: str, video_path: str, predictor_path: str, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int):
 	from core.decoding.decoder import Decoder
@@ -74,20 +75,44 @@ def predict(weights_file_path: str, video_path: str, predictor_path: str, frame_
 	input_length = np.array([len(x) for x in x_data])
 	results = decoder.decode(y_pred, input_length)
 
-	print('\n\nRESULTS:')
+	print('\n\nRESULTS:\n')
 
 	visualize_input  = input('Visualize results as video captions [y/N]? ')
+	visualize_videos = visualize_input and visualize_input.lower()[0] == 'y'
 
-	if visualize_input and visualize_input.lower()[0] == 'y':
-		visualize_videos = True
-	else:
-		visualize_videos = False
+	print()
+
+	save_csv_input = input('Save outputs to CSV [y/N]? ')
+	save_csv = save_csv_input and save_csv_input.lower()[0] == 'y'
+
+	if save_csv:
+		output_csv_path = input('Output CSV name (default is \'output\'): ')
+
+		if not output_csv_path:
+			output_csv_path = 'output.csv'
+
+		if not output_csv_path.endswith('.csv'):
+			output_csv_path += '.csv'
+
+		output_csv_path = os.path.realpath(output_csv_path)
 
 	for (i, v), r in zip(input_data, results):
 		print('\nVideo: {}\n    Result: {}'.format(i, r))
 
 		if visualize_videos:
 			visualize_video_subtitle(v, r)
+
+	if save_csv:
+		output_csv_already_existed = os.path.exists(output_csv_path)
+
+		with open(output_csv_path, 'a') as f:
+			writer = csv.writer(f)
+
+			if not output_csv_already_existed:
+				writer.writerow(['file', 'prediction'])
+
+			for (i, _), r in zip(input_data, results):
+				writer.writerow([i, r])
 
 
 def get_video_files_in_dir(path: str) -> [str]:
