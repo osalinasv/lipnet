@@ -65,7 +65,7 @@ def main():
 
 	os.makedirs(output_path)
 
-	for r, files in copy_files(input_path, output_path, amount):
+	for _, files in copy_files(input_path, output_path, amount):
 		for f in files:
 			new_f = f.replace(input_path, output_path)
 			new_d = os.path.dirname(new_f)
