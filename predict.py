@@ -67,7 +67,30 @@ def predict(weights_file_path: str, video_path: str, predictor_path: str, frame_
 	lipnext.model.load_weights(weights_file_path)
 
 	x_data = np.array([x[1] for x in input_data])
-	y_pred = lipnext.predict(x_data)
+	y_pred = None
+
+	x_data_len = len(x_data)
+	batch_size = env.BATCH_SIZE
+	batch_iterations = int(np.ceil(x_data_len / batch_size))
+
+	elapsed_videos = 0
+
+	for idx in range(0, batch_iterations):
+		split_start = idx * batch_size
+		split_end   = split_start + batch_size
+
+		if split_end > x_data_len:
+			split_end = x_data_len
+
+		elapsed_videos += split_end - split_start
+		videos_batch = x_data[split_start:split_end]
+
+		if y_pred is None:
+			y_pred = lipnext.predict(videos_batch)
+		else:
+			y_pred = np.append(y_pred, lipnext.predict(videos_batch), axis=0)
+
+		print('Predicted [{}/{}] videos ({}/{})'.format(elapsed_videos, x_data_len, idx + 1, batch_iterations))
 
 	spell   = Spell(DICTIONARY_PATH)
 	decoder = Decoder(greedy=DECODER_GREEDY, beam_width=DECODER_BEAM_WIDTH, postprocessors=[labels_to_text, spell.sentence])
@@ -76,6 +99,9 @@ def predict(weights_file_path: str, video_path: str, predictor_path: str, frame_
 	results = decoder.decode(y_pred, input_length)
 
 	print('\n\nRESULTS:\n')
+
+	display_input  = input('Display outputs in console [y/N]? ')
+	display_videos = display_input and display_input.lower()[0] == 'y'
 
 	visualize_input  = input('Visualize results as video captions [y/N]? ')
 	visualize_videos = visualize_input and visualize_input.lower()[0] == 'y'
@@ -96,16 +122,18 @@ def predict(weights_file_path: str, video_path: str, predictor_path: str, frame_
 
 		output_csv_path = os.path.realpath(output_csv_path)
 
-	for (i, v), r in zip(input_data, results):
-		print('\nVideo: {}\n    Result: {}'.format(i, r))
+	if display_videos or visualize_videos:
+		for (i, v), r in zip(input_data, results):
+			if (display_videos):
+				print('\nVideo: {}\n    Result: {}'.format(i, r))
 
-		if visualize_videos:
-			visualize_video_subtitle(v, r)
+			if visualize_videos:
+				visualize_video_subtitle(v, r)
 
 	if save_csv:
 		output_csv_already_existed = os.path.exists(output_csv_path)
 
-		with open(output_csv_path, 'a') as f:
+		with open(output_csv_path, 'w') as f:
 			writer = csv.writer(f)
 
 			if not output_csv_already_existed:
