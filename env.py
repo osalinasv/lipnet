@@ -17,3 +17,11 @@ OUTPUT_SIZE = int(os.getenv('OUTPUT_SIZE'))
 
 BATCH_SIZE = int(os.getenv('BATCH_SIZE'))
 VAL_SPLIT  = float(os.getenv('VAL_SPLIT'))
+
+MEAN_R = float(os.getenv('MEAN_R'))
+MEAN_G = float(os.getenv('MEAN_G'))
+MEAN_B = float(os.getenv('MEAN_B'))
+
+STD_R = float(os.getenv('STD_R'))
+STD_G = float(os.getenv('STD_G'))
+STD_B = float(os.getenv('STD_B'))
