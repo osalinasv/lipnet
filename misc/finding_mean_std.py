@@ -6,7 +6,7 @@ from core.helpers.video import get_video_data_from_file
 from progress.bar import ShadyBar
 
 
-# mean [0.68873879 0.50568776 0.3343385 ]
+# mean [0.68873879 0.50568776 0.3343385]
 # std  [0.14589616 0.11136819 0.11655929]
 
 

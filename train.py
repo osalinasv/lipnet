@@ -69,11 +69,10 @@ def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame
 		generator       = datagen.train_generator,
 		validation_data = datagen.val_generator,
 		epochs          = epochs,
-		shuffle         = True,
 		verbose         = 1,
-		max_queue_size  = 10,
+		max_queue_size  = 5,
 		use_multiprocessing = True,
-		workers         = 2,
+		workers         = 4,
 		callbacks       = [checkpoint, tensorboard, csv_logger, error_rates]
 	)
 
