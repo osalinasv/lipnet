@@ -79,4 +79,4 @@ class Lipnext(object):
 	@property
 	def test_function(self):
 		# captures output of softmax, which is the real prediction output of the model
-		return k.function([self.input_layer, k.learning_phase()], [self.y_pred, k.learning_phase()])
+		return k.function([self.input_layer, k.learning_phase()], [self.y_pred])

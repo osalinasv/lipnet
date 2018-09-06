@@ -20,7 +20,7 @@ DECODER_GREEDY     = False
 DECODER_BEAM_WIDTH = 200
 
 
-# python train.py -d data/dataset -a D:/GRID/aligns/ -e 1
+# python train.py -d data/dataset -a data/aligns/ -e 1
 def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int, batch_size: int, val_split: float, use_cache: bool):
 	from common.files import make_dir_if_not_exists
 	from keras.callbacks import CSVLogger, ModelCheckpoint, TensorBoard
@@ -72,7 +72,7 @@ def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame
 		verbose         = 1,
 		max_queue_size  = 5,
 		use_multiprocessing = True,
-		workers         = 4,
+		workers         = 2,
 		callbacks       = [checkpoint, tensorboard, csv_logger, error_rates]
 	)
 

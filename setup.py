@@ -12,13 +12,16 @@ setup(
 		'colorama==0.3.9',
 		'dlib==19.15.0',
 		'editdistance==0.4',
-		'imutils==0.4.6',
-		'Keras==2.1.6',
-		'matplotlib==2.2.2',
+		'imutils==0.5.1',
+		'Keras==2.2.2',
+		'Keras-Applications==1.0.4',
+		'Keras-Preprocessing==1.0.2',
+		'matplotlib==2.2.3',
+		'numpy==1.14.5',
 		'opencv-python==3.4.1.15',
-		'python-dotenv==0.8.2',
+		'python-dotenv==0.9.1',
 		'progress==1.4',
 		'sk-video==1.1.10',
-		'tensorflow-gpu==1.9.0'
+		'tensorflow-gpu==1.10.0'
 	]
 )

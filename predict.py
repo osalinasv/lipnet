@@ -100,8 +100,8 @@ def predict(weights_file_path: str, video_path: str, predictor_path: str, frame_
 
 	print('\n\nRESULTS:\n')
 
-	display_input  = input('Display outputs in console [y/N]? ')
-	display_videos = display_input and display_input.lower()[0] == 'y'
+	display_input  = input('Display outputs in console [Y/n]? ')
+	display_videos = True if not display_input or display_input.lower()[0] == 'y' else False
 
 	visualize_input  = input('Visualize results as video captions [y/N]? ')
 	visualize_videos = visualize_input and visualize_input.lower()[0] == 'y'
