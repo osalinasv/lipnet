@@ -160,13 +160,8 @@ venv.bak/
 
 # LipNext ignores
 
+.vscode
+
 data/*
 !data/dictionaries
 !data/predictors
-
-preprocessing/alignment
-preprocessing/detect-face-parts/pruebas
-
-# Virtual environment ignore
-
-preprocessing/prepvenv
