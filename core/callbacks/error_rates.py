@@ -15,6 +15,8 @@ from core.utils.wer import wer_sentence
 class ErrorRates(Callback):
 
 	def __init__(self, output_path: str, lipnext: Lipnext, val_generator: Sequence, decoder: Decoder, samples: int = 256):
+		super().__init__()
+
 		self.output_path = output_path
 		self.lipnext     = lipnext
 		self.generator   = val_generator.__getitem__
@@ -64,12 +66,12 @@ class ErrorRates(Callback):
 
 
 	def calculate_wer(self, data: [tuple]) ->  (float, float):
-		mean_length = np.mean([len(d[1].split()) for d in data])
+		mean_length = int(np.mean([len(d[1].split()) for d in data]))
 		return self.calculate_mean_generic(data, mean_length, wer_sentence)
 
 
 	def calculate_cer(self, data: [tuple]) ->  (float, float):
-		mean_length = np.mean([len(d[1]) for d in data])
+		mean_length = int(np.mean([len(d[1]) for d in data]))
 		return self.calculate_mean_generic(data, mean_length, editdistance.eval)
 
 
@@ -88,13 +90,17 @@ class ErrorRates(Callback):
 		}
 
 
-	def on_train_begin(self, logs={}):
+	def on_train_begin(self, logs=None):
+		if logs is None: logs = {}
+
 		with open(self.output_path, 'w') as f:
 			writer = csv.writer(f)
 			writer.writerow(['epoch', 'samples', 'wer', 'wer_norm', 'cer', 'cer_norm'])
 
 
-	def on_epoch_end(self, epoch: int, logs={}):
+	def on_epoch_end(self, epoch: int, logs=None):
+		if logs is None:logs = {}
+
 		print('\nEpoch {:05d}: Calculating error rates...'.format(epoch + 1))
 
 		statistics = self.calculate_statistics()

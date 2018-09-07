@@ -51,12 +51,12 @@ def calculate_mean_generic(data: [tuple], mean_length: int, evaluator) -> (float
 
 
 def calculate_wer(data: [tuple]) ->  (float, float):
-	mean_length = np.mean([len(d[1].split()) for d in data])
+	mean_length = int(np.mean([len(d[1].split()) for d in data]))
 	return calculate_mean_generic(data, mean_length, wer_sentence)
 
 
 def calculate_cer(data: [tuple]) ->  (float, float):
-	mean_length = np.mean([len(d[1]) for d in data])
+	mean_length = int(np.mean([len(d[1]) for d in data]))
 	return calculate_mean_generic(data, mean_length, editdistance.eval)
 
 

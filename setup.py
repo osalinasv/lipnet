@@ -18,7 +18,7 @@ setup(
 		'Keras-Preprocessing==1.0.2',
 		'matplotlib==2.2.3',
 		'numpy==1.14.5',
-		'opencv-python==3.4.1.15',
+		'opencv-python==3.4.2.17',
 		'python-dotenv==0.9.1',
 		'progress==1.4',
 		'sk-video==1.1.10',

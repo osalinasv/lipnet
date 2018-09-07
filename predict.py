@@ -4,10 +4,9 @@ import dlib
 import env
 import numpy as np
 import os
-import skvideo.io
 
 from colorama import init, Fore
-from common.files import is_dir, is_file, get_file_extension, get_files_in_dir, walk_level
+from common.files import is_dir, is_file, get_file_extension, get_files_in_dir
 from core.helpers.video import get_video_data_from_file, reshape_and_normalize_video_data
 from preprocessing.extract_roi import extract_video_data
 
@@ -110,6 +109,7 @@ def predict(weights_file_path: str, video_path: str, predictor_path: str, frame_
 
 	save_csv_input = input('Save outputs to CSV [y/N]? ')
 	save_csv = save_csv_input and save_csv_input.lower()[0] == 'y'
+	output_csv_path = None
 
 	if save_csv:
 		output_csv_path = input('Output CSV name (default is \'output\'): ')
@@ -130,7 +130,7 @@ def predict(weights_file_path: str, video_path: str, predictor_path: str, frame_
 			if visualize_videos:
 				visualize_video_subtitle(v, r)
 
-	if save_csv:
+	if save_csv and output_csv_path:
 		output_csv_already_existed = os.path.exists(output_csv_path)
 
 		with open(output_csv_path, 'w') as f:

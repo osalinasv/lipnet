@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
 import os
-import sys
 
 from colorama import init, Fore
 from common.files import is_file, get_file_extension

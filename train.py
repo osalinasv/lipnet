@@ -72,7 +72,7 @@ def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame
 		verbose         = 1,
 		max_queue_size  = 5,
 		use_multiprocessing = True,
-		workers         = 2,
+		workers         = 3,
 		callbacks       = [checkpoint, tensorboard, csv_logger, error_rates]
 	)
 
