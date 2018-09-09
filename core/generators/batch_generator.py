@@ -8,13 +8,8 @@ from keras.utils import Sequence
 
 class BatchGenerator(Sequence):
 
-	__video_shape = (env.FRAME_COUNT, env.IMAGE_WIDTH, env.IMAGE_HEIGHT, 1)
-
 	__video_mean = np.array([env.MEAN_R, env.MEAN_G, env.MEAN_B])
 	__video_std  = np.array([env.STD_R, env.STD_G, env.STD_B])
-
-	__mean_video_data = np.tile(__video_mean, __video_shape)
-	__std_video_data  = np.tile(__video_std, __video_shape)
 
 
 	def __init__(self, video_paths: list, align_hash: dict, batch_size: int):
@@ -71,8 +66,7 @@ class BatchGenerator(Sequence):
 				sentences.append(sentence)
 		
 		batch_size = len(x_data)
-		x_data = np.array(x_data)
-		x_data = self.standardize_batch(x_data, batch_size)
+		x_data = self.standardize_batch(np.array(x_data), batch_size)
 
 		y_data = np.array(y_data)
 		input_length = np.array(input_length)
@@ -108,7 +102,4 @@ class BatchGenerator(Sequence):
 
 
 	def standardize_batch(self, batch: np.ndarray, batch_size: int) -> np.ndarray:
-		mean = np.tile(self.__mean_video_data, (batch_size, 1, 1, 1, 1))
-		std  = np.tile(self.__std_video_data, (batch_size, 1, 1, 1, 1))
-
-		return (batch - mean) / std
+		return (batch - self.__video_mean) / self.__video_std
