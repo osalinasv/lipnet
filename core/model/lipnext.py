@@ -12,7 +12,7 @@ ADAM_S_MOMENTUM = 0.999
 ADAM_STABILITY  = 1e-08
 
 
-class Lipnext(object):
+class LipNext(object):
 
 	def __init__(self, frame_count: int, image_channels: int, image_height: int, image_width: int, max_string: int, output_size: int = env.OUTPUT_SIZE):
 		input_shape = self.get_input_shape(frame_count, image_channels, image_height, image_width)
@@ -47,7 +47,7 @@ class Lipnext(object):
 		self.gru_2_actv = layers.create_actv_layer('gru_2_actv', self.gru_2)
 
 		self.dense_1 = layers.create_dense_layer('dense_1', self.gru_2_actv, output_size)
-		self.y_pred = layers.create_actv_layer('softmax', self.dense_1, activation='softmax')
+		self.y_pred  = layers.create_actv_layer('softmax', self.dense_1, activation='softmax')
 
 		self.input_labels = layers.create_input_layer('labels', shape=[max_string])
 		self.input_length = layers.create_input_layer('input_length', shape=[1], dtype='int64')
@@ -73,10 +73,9 @@ class Lipnext(object):
 
 
 	def predict(self, input_batch):
-		return self.test_function([input_batch, 0])[0] # the first 0 indicates test
+		return self.capture_softmax_output([input_batch, 0])[0]
 
 
 	@property
-	def test_function(self):
-		# captures output of softmax, which is the real prediction output of the model
+	def capture_softmax_output(self):
 		return k.function([self.input_layer, k.learning_phase()], [self.y_pred])

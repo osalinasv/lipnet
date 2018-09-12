@@ -7,14 +7,14 @@ from common.files import make_dir_if_not_exists
 from functools import reduce
 from keras.callbacks import Callback
 from keras.utils import Sequence
-from core.model.lipnext import Lipnext
+from core.model.lipnext import LipNext
 from core.decoding.decoder import Decoder
 from core.utils.wer import wer_sentence
 
 
 class ErrorRates(Callback):
 
-	def __init__(self, output_path: str, lipnext: Lipnext, val_generator: Sequence, decoder: Decoder, samples: int = 256):
+	def __init__(self, output_path: str, lipnext: LipNext, val_generator: Sequence, decoder: Decoder, samples: int = 256):
 		super().__init__()
 
 		self.output_path = output_path
@@ -22,9 +22,6 @@ class ErrorRates(Callback):
 		self.generator   = val_generator.__getitem__
 		self.decoder     = decoder
 		self.samples     = samples
-
-		output_dir = os.path.dirname(self.output_path)
-		make_dir_if_not_exists(output_dir)
 
 
 	def get_sample_batch(self) -> list:
@@ -93,13 +90,16 @@ class ErrorRates(Callback):
 	def on_train_begin(self, logs=None):
 		if logs is None: logs = {}
 
+		output_dir = os.path.dirname(self.output_path)
+		make_dir_if_not_exists(output_dir)
+
 		with open(self.output_path, 'w') as f:
 			writer = csv.writer(f)
 			writer.writerow(['epoch', 'samples', 'wer', 'wer_norm', 'cer', 'cer_norm'])
 
 
 	def on_epoch_end(self, epoch: int, logs=None):
-		if logs is None:logs = {}
+		if logs is None: logs = {}
 
 		print('\nEpoch {:05d}: Calculating error rates...'.format(epoch + 1))
 

@@ -2,7 +2,7 @@ import os
 import pickle
 import random
 
-from common.files import is_file, get_files_in_dir, get_file_name, walk_level
+from common.files import is_file, get_files_in_dir, get_file_name, get_immediate_subdirs
 from core.helpers.align import Align
 from core.generators.batch_generator import BatchGenerator
 
@@ -57,9 +57,7 @@ class DatasetGenerator(object):
 	def get_speaker_groups(self, path: str) -> list:
 		speaker_groups = []
 
-		for sub_dir, _, _ in walk_level(path):
-			if sub_dir == path: continue
-
+		for sub_dir in get_immediate_subdirs(path):
 			videos_in_group = self.get_numpy_files_in_dir(sub_dir)
 			random.shuffle(videos_in_group)
 
@@ -73,8 +71,8 @@ class DatasetGenerator(object):
 		val_list   = []
 
 		for group in groups:
-			group_len    = len(group)
-			val_amount   = int(round(group_len * val_split))
+			group_len  = len(group)
+			val_amount = int(round(group_len * val_split))
 
 			train_list += group[val_amount:]
 			val_list   += group[:val_amount]

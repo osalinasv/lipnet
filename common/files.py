@@ -11,35 +11,23 @@ def is_file(path: str) -> bool:
 
 
 def get_file_extension(path: str) -> str:
-	return os.path.splitext(path)[1]
+	return os.path.splitext(path)[1] if is_file(path) else ''
 
 
 def get_file_name(path: str) -> str:
-	return os.path.splitext(os.path.basename(path))[0]
+	return os.path.splitext(os.path.basename(path))[0] if is_file(path) else ''
 
 
 def make_dir_if_not_exists(path: str):
 	if not is_dir(path): os.makedirs(path)
 
 
-def get_files_in_dir(path: str, pattern: str):
+def get_files_in_dir(path: str, pattern: str = '*'):
 	for root, _, files in os.walk(path):
-		for basename in files:
-			if fnmatch.fnmatch(basename, pattern):
-				yield os.path.realpath(os.path.join(root, basename))
+		for f in files:
+			if fnmatch.fnmatch(f, pattern):
+				yield os.path.realpath(os.path.join(root, f))
 
 
-def walk_level(some_dir: str, level: int = 1):
-	some_dir = some_dir.rstrip(os.path.sep)
-
-	assert os.path.isdir(some_dir)
-
-	num_sep = some_dir.count(os.path.sep)
-
-	for root, dirs, files in os.walk(some_dir):
-		yield root, dirs, files
-
-		num_sep_this = root.count(os.path.sep)
-
-		if num_sep + level <= num_sep_this:
-			del dirs[:]
+def get_immediate_subdirs(path: str) -> [str]:
+	return [os.path.join(path, s) for s in next(os.walk(path))[1]] if is_dir(path) else []

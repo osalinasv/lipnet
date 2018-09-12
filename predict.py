@@ -27,7 +27,7 @@ DECODER_BEAM_WIDTH = 200
 def predict(weights_file_path: str, video_path: str, predictor_path: str, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int):
 	from core.decoding.decoder import Decoder
 	from core.decoding.spell import Spell
-	from core.model.lipnext import Lipnext
+	from core.model.lipnext import LipNext
 	from core.utils.labels import labels_to_text
 	from core.utils.visualization import visualize_video_subtitle
 	
@@ -60,7 +60,7 @@ def predict(weights_file_path: str, video_path: str, predictor_path: str, frame_
 
 	print('\nMaking predictions...')
 
-	lipnext = Lipnext(frame_count, image_channels, image_height, image_width, max_string)
+	lipnext = LipNext(frame_count, image_channels, image_height, image_width, max_string)
 	lipnext.compile_model()
 
 	lipnext.model.load_weights(weights_file_path)

@@ -13,6 +13,8 @@ class BatchGenerator(Sequence):
 
 
 	def __init__(self, video_paths: list, align_hash: dict, batch_size: int):
+		super().__init__()
+		
 		self.video_paths = video_paths
 		self.align_hash  = align_hash
 		self.batch_size  = batch_size
@@ -93,12 +95,8 @@ class BatchGenerator(Sequence):
 		return video_data, align_data.padded_label, align_data.label_length, align_data.sentence
 
 
-	def flip_frame(self, frame: np.ndarray) -> np.ndarray:
-		return np.fliplr(frame)
-
-
 	def flip_video(self, video_data: np.ndarray) -> np.ndarray:
-		return np.array([self.flip_frame(f) for f in video_data])
+		return np.flip(video_data, axis=1) # flip in the vertical axis because are flipped 90deg when passed to the model
 
 
 	def standardize_batch(self, batch: np.ndarray, batch_size: int) -> np.ndarray:

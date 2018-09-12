@@ -28,7 +28,7 @@ def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame
 	from core.decoding.decoder import Decoder
 	from core.decoding.spell import Spell
 	from core.generators.dataset_generator import DatasetGenerator
-	from core.model.lipnext import Lipnext
+	from core.model.lipnext import LipNext
 	from core.utils.labels import labels_to_text
 
 
@@ -53,7 +53,7 @@ def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame
 	csv_logger  = CSVLogger(csv_log_dir, separator=',', append=True)
 	checkpoint  = ModelCheckpoint(os.path.join(checkpoint_dir, "w_{epoch:04d}_{val_loss:.2f}.hdf5"), monitor='val_loss', save_weights_only=True, mode='auto', period=1, verbose=1)
 
-	lipnext = Lipnext(frame_count, image_channels, image_height, image_width, max_string)
+	lipnext = LipNext(frame_count, image_channels, image_height, image_width, max_string)
 	lipnext.compile_model()
 
 	datagen = DatasetGenerator(dataset_path, aligns_path, batch_size, max_string, val_split, use_cache)
