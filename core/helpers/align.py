@@ -3,47 +3,34 @@ import numpy as np
 from core.utils.labels import text_to_labels
 
 
-class Align(object):
-
-	def __init__(self, absolute_max_string_len: int):
-		self.absolute_max_string_len = absolute_max_string_len
+__SILENCE_TOKENS = ['sp','sil']
 
 
-	def from_file(self, path: str):
-		with open(path, 'r') as f:
-			lines = f.readlines()
+def align_from_file(path: str, max_string: int) -> (str, np.ndarray, int):
+	with open(path, 'r') as f:
+		lines = f.readlines()
 
-		align = [(int(y[0]) / 1000, int(y[1]) / 1000, y[2]) for y in [x.strip().split(' ') for x in lines]]
-		self.build(align)
+	align = [(int(y[0]) / 1000, int(y[1]) / 1000, y[2]) for y in [x.strip().split(' ') for x in lines]]
+	align = __strip_from_align(align, __SILENCE_TOKENS)
 
-		return self
+	sentence = __get_align_sentence(align, __SILENCE_TOKENS)
+	labels   = __get_sentence_labels(sentence)
+	padded_label = __get_padded_label(labels, max_string)
 
-
-	def build(self, align: list):
-		self.align        = self.strip(align, ['sp','sil'])
-		self.sentence     = self.get_sentence(align)
-		self.label        = self.get_label(self.sentence)
-		self.padded_label = self.get_padded_label(self.label)
+	return sentence, padded_label, len(labels)
 
 
-	def strip(self, align: list, items: [str]) -> [str]:
-		return [sub for sub in align if sub[2] not in items]
+def __strip_from_align(align: list, items: list) -> list:
+	return [sub for sub in align if sub[2] not in items]
 
 
-	def get_sentence(self, align: list) -> str:
-		return ' '.join([y[-1] for y in align if y[-1] not in ['sp', 'sil']])
+def __get_align_sentence(align: list, items: list) -> str:
+	return ' '.join([y[-1] for y in align if y[-1] not in items])
 
 
-	def get_label(self, sentence: str) -> [chr]:
-		return text_to_labels(sentence)
+def __get_sentence_labels(sentence: str) -> list:
+	return text_to_labels(sentence)
 
 
-	# Returns an array that is of size absolute_max_string_len. Fills the left spaces with -1 in case the len(label) is less than absolute_max_string_len.
-	def get_padded_label(self, label: [chr]) -> np.ndarray:
-		padding = np.ones((self.absolute_max_string_len - len(label))) * -1
-		return np.concatenate((np.array(label), padding), axis=0)
-
-
-	@property
-	def label_length(self) -> int:
-		return len(self.label)
+def __get_padded_label(labels: list, max_string: int) -> np.ndarray:
+	return np.array(labels + ([-1.0] * (max_string - len(labels))))

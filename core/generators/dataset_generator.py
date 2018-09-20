@@ -3,7 +3,7 @@ import pickle
 import random
 
 from common.files import is_file, get_files_in_dir, get_file_name, get_immediate_subdirs
-from core.helpers.align import Align
+from core.helpers.align import align_from_file
 from core.generators.batch_generator import BatchGenerator
 
 
@@ -87,6 +87,6 @@ class DatasetGenerator(object):
 			video_name = get_file_name(path)
 			align_path = os.path.join(self.aligns_path, video_name) + '.align'
 
-			align_hash[video_name] = Align(self.max_string).from_file(align_path)
+			align_hash[video_name] = align_from_file(align_path, self.max_string)
 
 		return align_hash

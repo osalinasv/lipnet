@@ -89,10 +89,7 @@ class BatchGenerator(Sequence):
 
 
 	def get_data_from_path(self, path: str) -> (np.ndarray, np.ndarray, int, str):
-		video_data = get_video_data_from_file(path)
-		align_data = self.align_hash[get_file_name(path)]
-
-		return video_data, align_data.padded_label, align_data.label_length, align_data.sentence
+		return (get_video_data_from_file(path), *self.align_hash[get_file_name(path)])
 
 
 	def flip_video(self, video_data: np.ndarray) -> np.ndarray:
