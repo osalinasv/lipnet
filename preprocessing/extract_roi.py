@@ -1,14 +1,15 @@
-import cv2
-import env
-import numpy as np
-import operator
 import os
-import skvideo.io
+from typing import Optional
 
-from colorama import init, Back, Fore
-from common.files import get_file_name
+import cv2
+import numpy as np
+import skvideo.io
+from colorama import Back, Fore, init
 from imutils import face_utils
 from progress.bar import ShadyBar
+
+import env
+from common.files import get_file_name
 
 
 init(autoreset=True)
@@ -32,7 +33,7 @@ def video_to_frames(video_path: str, output_path: str, detector, predictor) -> b
 		return True
 
 
-def extract_video_data(path: str, detector, predictor) -> np.ndarray:
+def extract_video_data(path: str, detector, predictor) -> Optional[np.ndarray]:
 	print('\n{}'.format(path))
 	
 	video_data     = skvideo.io.vread(path)
@@ -58,7 +59,7 @@ def extract_video_data(path: str, detector, predictor) -> np.ndarray:
 	return mouth_data
 
 
-def extract_mouth_on_frame(frame: np.ndarray, detector, predictor, idx: int) -> np.ndarray:
+def extract_mouth_on_frame(frame: np.ndarray, detector, predictor, idx: int) -> Optional[np.ndarray]:
 	m_points = extract_mouth_points(frame, detector, predictor)
 
 	if m_points is None:
@@ -78,9 +79,9 @@ def extract_mouth_on_frame(frame: np.ndarray, detector, predictor, idx: int) -> 
 
 
 def crop_image(image: np.ndarray, center: tuple, size: tuple) -> np.ndarray:
-	start  = tuple(map(lambda a, b: a - b // 2, center, size))
-	end    = tuple(map(operator.add, start, size))
-	slices = tuple(map(slice, start, end))
+	start  = tuple(a - b // 2 for a, b in zip(center, size))
+	end    = tuple(a + b for a, b in zip(start, size))
+	slices = tuple(slice(a, b) for a, b in zip(start, end))
 
 	return image[slices]
 
@@ -94,7 +95,7 @@ def get_mouth_points_center(mouth_points: np.ndarray) -> np.ndarray:
 	return mouth_centroid
 
 
-def extract_mouth_points(frame: np.ndarray, detector, predictor) -> np.ndarray:
+def extract_mouth_points(frame: np.ndarray, detector, predictor) -> Optional[np.ndarray]:
 	gray     = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 	detected = detector(gray, 1)
 

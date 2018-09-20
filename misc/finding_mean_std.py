@@ -1,9 +1,9 @@
 import numpy as np
-import env
+from progress.bar import ShadyBar
 
+import env
 from common.files import get_files_in_dir
 from core.helpers.video import get_video_data_from_file
-from progress.bar import ShadyBar
 
 
 # mean [0.68873879 0.50568776 0.3343385]

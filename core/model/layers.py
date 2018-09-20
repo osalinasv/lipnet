@@ -1,7 +1,7 @@
 from keras import backend as k
 from keras.layers import Input
-from keras.layers.core import Activation, Dense, Flatten, Lambda, SpatialDropout3D
 from keras.layers.convolutional import Conv3D, ZeroPadding3D
+from keras.layers.core import Activation, Dense, Flatten, Lambda, SpatialDropout3D
 from keras.layers.normalization import BatchNormalization
 from keras.layers.pooling import MaxPooling3D
 from keras.layers.recurrent import GRU
@@ -76,9 +76,9 @@ def ctc_lambda_func(args):
 	return k.ctc_batch_cost(labels, y_pred, input_length, label_length)
 
 
-def CTC(name: str, args) -> Lambda:
+def ctc(name: str, args) -> Lambda:
 	return Lambda(ctc_lambda_func, output_shape=(1,), name=name)(args)
 
 
 def create_ctc_layer(name: str, y_pred, input_labels, input_length, label_length) -> Lambda:
-	return CTC(name, [y_pred, input_labels, input_length, label_length])
+	return ctc(name, [y_pred, input_labels, input_length, label_length])

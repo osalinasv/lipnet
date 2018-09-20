@@ -19,7 +19,7 @@ def get_npy_files(path: str) -> [str]:
 				yield os.path.realpath(os.path.join(path, f))
 
 
-def copy_files(inp: str, out: str, amount: int) -> (str, [str]):
+def copy_files(inp: str, amount: int) -> (str, [str]):
 	for root, _, _ in os.walk(inp):
 		if root == inp: continue
 
@@ -36,14 +36,9 @@ def copy_files(inp: str, out: str, amount: int) -> (str, [str]):
 def main():
 	ap = argparse.ArgumentParser()
 
-	ap.add_argument('-i', '--input-path', required=True,
-		help='Path to the source dataset')
-
-	ap.add_argument('-o', '--output-path', required=True,
-		help='Path to the output dataset')
-
-	ap.add_argument('-a', '--amount', required=True,
-		help='Amount of files to copy per subdirectory', type=int)
+	ap.add_argument('-i', '--input-path', required=True, help='Path to the source dataset')
+	ap.add_argument('-o', '--output-path', required=True, help='Path to the output dataset')
+	ap.add_argument('-a', '--amount', required=True, help='Amount of files to copy per subdirectory', type=int)
 
 	args = vars(ap.parse_args())
 
@@ -65,7 +60,7 @@ def main():
 
 	os.makedirs(output_path)
 
-	for _, files in copy_files(input_path, output_path, amount):
+	for _, files in copy_files(input_path, amount):
 		for f in files:
 			new_f = f.replace(input_path, output_path)
 			new_d = os.path.dirname(new_f)

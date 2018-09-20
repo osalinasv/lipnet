@@ -1,10 +1,18 @@
 import argparse
 import datetime
-import env
 import os
 
-from colorama import init, Fore
-from common.files import is_dir
+from colorama import Fore, init
+from keras.callbacks import CSVLogger, ModelCheckpoint, TensorBoard
+
+import env
+from common.files import is_dir, make_dir_if_not_exists
+from core.callbacks.error_rates import ErrorRates
+from core.decoding.decoder import Decoder
+from core.decoding.spell import Spell
+from core.generators.dataset_generator import DatasetGenerator
+from core.model.lipnext import LipNext
+from core.utils.labels import labels_to_text
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -22,16 +30,6 @@ DECODER_BEAM_WIDTH = 200
 
 # python train.py -d data/dataset -a data/aligns/ -e 1
 def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int, batch_size: int, val_split: float, use_cache: bool):
-	from common.files import make_dir_if_not_exists
-	from keras.callbacks import CSVLogger, ModelCheckpoint, TensorBoard
-	from core.callbacks.error_rates import ErrorRates
-	from core.decoding.decoder import Decoder
-	from core.decoding.spell import Spell
-	from core.generators.dataset_generator import DatasetGenerator
-	from core.model.lipnext import LipNext
-	from core.utils.labels import labels_to_text
-
-
 	print("\nTRAINING\n")
 
 	print("Running: {}\n".format(run_name))
@@ -66,15 +64,15 @@ def train(run_name: str, dataset_path: str, aligns_path: str, epochs: int, frame
 	print('\nStarting training...\n')
 
 	lipnext.model.fit_generator(
-		generator       = datagen.train_generator,
-		validation_data = datagen.val_generator,
-		epochs          = epochs,
-		verbose         = 1,
-		shuffle         = True,
-		max_queue_size  = 5,
-		workers         = 3,
-		callbacks       = [checkpoint, tensorboard, csv_logger, error_rates],
-		use_multiprocessing = True
+		generator      =datagen.train_generator,
+		validation_data=datagen.val_generator,
+		epochs         =epochs,
+		verbose        =1,
+		shuffle        =True,
+		max_queue_size =5,
+		workers        =3,
+		callbacks      =[checkpoint, tensorboard, csv_logger, error_rates],
+		use_multiprocessing=True
 	)
 
 
@@ -89,17 +87,10 @@ def main():
 
 	ap = argparse.ArgumentParser()
 
-	ap.add_argument('-d', '--dataset-path', required=True,
-		help='Path to the dataset root directory')
-
-	ap.add_argument('-a', '--aligns-path', required=True,
-		help='Path to the directory containing all align files')
-
-	ap.add_argument('-e', '--epochs', required=False,
-		help='(Optional) Number of epochs to run', type=int, default=5000)
-
-	ap.add_argument('-c', '--use-cache', required=False,
-		help='(Optional) Load dataset from a cache file', type=bool, default=True)
+	ap.add_argument('-d', '--dataset-path', required=True, help='Path to the dataset root directory')
+	ap.add_argument('-a', '--aligns-path', required=True, help='Path to the directory containing all align files')
+	ap.add_argument('-e', '--epochs', required=False, help='(Optional) Number of epochs to run', type=int, default=5000)
+	ap.add_argument('-c', '--use-cache', required=False, help='(Optional) Load dataset from a cache file', type=bool, default=True)
 
 	args = vars(ap.parse_args())
 

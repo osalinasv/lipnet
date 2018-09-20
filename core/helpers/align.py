@@ -3,7 +3,7 @@ import numpy as np
 from core.utils.labels import text_to_labels
 
 
-__SILENCE_TOKENS = ['sp','sil']
+__SILENCE_TOKENS = ['sp', 'sil']
 
 
 def align_from_file(path: str, max_string: int) -> (str, np.ndarray, int):

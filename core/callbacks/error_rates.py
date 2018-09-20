@@ -1,14 +1,14 @@
 import csv
-import editdistance
-import numpy as np
 import os
 
-from common.files import make_dir_if_not_exists
-from functools import reduce
+import editdistance
+import numpy as np
 from keras.callbacks import Callback
 from keras.utils import Sequence
-from core.model.lipnext import LipNext
+
+from common.files import make_dir_if_not_exists
 from core.decoding.decoder import Decoder
+from core.model.lipnext import LipNext
 from core.utils.wer import wer_sentence
 
 
@@ -52,22 +52,27 @@ class ErrorRates(Callback):
 		return sample_batch
 
 
-	def calculate_mean_generic(self, data: [tuple], mean_length: int, evaluator) -> (float, float):
-		values = list(map(lambda x: float(evaluator(x[0], x[1])), data))
+	@staticmethod
+	def calculate_mean_generic(data: [tuple], mean_length: int, evaluator) -> (float, float):
+		values = [float(evaluator(x[0], x[1])) for x in data]
 
-		total = reduce(lambda x, y: x + y, values)
-		total_norm = reduce(lambda x, y: x + (y / mean_length), values)
+		total = 0
+		total_norm = 0
+
+		for v in values:
+			total += v
+			total_norm += v / mean_length
 
 		length = len(data)
 		return total / length, total_norm / length
 
 
-	def calculate_wer(self, data: [tuple]) ->  (float, float):
+	def calculate_wer(self, data: [tuple]) -> (float, float):
 		mean_length = int(np.mean([len(d[1].split()) for d in data]))
 		return self.calculate_mean_generic(data, mean_length, wer_sentence)
 
 
-	def calculate_cer(self, data: [tuple]) ->  (float, float):
+	def calculate_cer(self, data: [tuple]) -> (float, float):
 		mean_length = int(np.mean([len(d[1]) for d in data]))
 		return self.calculate_mean_generic(data, mean_length, editdistance.eval)
 
@@ -79,17 +84,15 @@ class ErrorRates(Callback):
 		cer, cer_norm = self.calculate_cer(sample_batch)
 
 		return {
-			'samples' : len(sample_batch),
-			'wer'     : wer,
+			'samples':  len(sample_batch),
+			'wer':      wer,
 			'wer_norm': wer_norm,
-			'cer'     : cer,
+			'cer':      cer,
 			'cer_norm': cer_norm
 		}
 
 
 	def on_train_begin(self, logs=None):
-		if logs is None: logs = {}
-
 		output_dir = os.path.dirname(self.output_path)
 		make_dir_if_not_exists(output_dir)
 
@@ -99,13 +102,11 @@ class ErrorRates(Callback):
 
 
 	def on_epoch_end(self, epoch: int, logs=None):
-		if logs is None: logs = {}
-
-		print('\nEpoch {:05d}: Calculating error rates...'.format(epoch + 1))
+		print('Epoch {:05d}: Calculating error rates...'.format(epoch + 1), end='')
 
 		statistics = self.calculate_statistics()
 
-		print('Epoch {:05d}: ({} samples) [WER {:.3f} - {:.3f}]\t[CER {:.3f} - {:.3f}]\n'.format(epoch + 1, statistics['samples'], statistics['wer'], statistics['wer_norm'], statistics['cer'], statistics['cer_norm']))
+		print('\rEpoch {:05d}: ({} samples) [WER {:.3f} - {:.3f}]\t[CER {:.3f} - {:.3f}]\n'.format(epoch + 1, statistics['samples'], statistics['wer'], statistics['wer_norm'], statistics['cer'], statistics['cer_norm']))
 
 		with open(self.output_path, 'a') as f:
 			writer = csv.writer(f)

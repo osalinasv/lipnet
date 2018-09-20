@@ -1,9 +1,9 @@
 import numpy as np
-import env
+from keras.utils import Sequence
 
+import env
 from common.files import get_file_name
 from core.helpers.video import get_video_data_from_file
-from keras.utils import Sequence
 
 
 class BatchGenerator(Sequence):
@@ -48,7 +48,7 @@ class BatchGenerator(Sequence):
 		sentences = []
 
 		for path in videos_batch:
-			video_data, label, label_len, sentence = self.get_data_from_path(path)
+			video_data, sentence, label, label_len = self.get_data_from_path(path)
 
 			x_data.append(video_data)
 			y_data.append(label)
@@ -68,7 +68,7 @@ class BatchGenerator(Sequence):
 				sentences.append(sentence)
 		
 		batch_size = len(x_data)
-		x_data = self.standardize_batch(np.array(x_data), batch_size)
+		x_data = self.standardize_batch(np.array(x_data))
 
 		y_data = np.array(y_data)
 		input_length = np.array(input_length)
@@ -76,25 +76,27 @@ class BatchGenerator(Sequence):
 		sentences    = np.array(sentences)
 
 		inputs = {
-			'input'       : x_data,
-			'labels'      : y_data,
+			'input':        x_data,
+			'labels':       y_data,
 			'input_length': input_length,
 			'label_length': label_length,
-			'sentences'   : sentences
+			'sentences':    sentences
 		}
 
-		outputs = { 'ctc': np.zeros([batch_size]) } # dummy data for dummy loss function
+		outputs = {'ctc': np.zeros([batch_size])}  # dummy data for dummy loss function
 
 		return inputs, outputs
 
 
 	def get_data_from_path(self, path: str) -> (np.ndarray, np.ndarray, int, str):
+		# video_data, sentence, label, label_len
 		return (get_video_data_from_file(path), *self.align_hash[get_file_name(path)])
 
 
-	def flip_video(self, video_data: np.ndarray) -> np.ndarray:
-		return np.flip(video_data, axis=1) # flip in the vertical axis because are flipped 90deg when passed to the model
+	@staticmethod
+	def flip_video(video_data: np.ndarray) -> np.ndarray:
+		return np.flip(video_data, axis=1)  # flip in the vertical axis because videos are flipped 90deg when passed to the model
 
 
-	def standardize_batch(self, batch: np.ndarray, batch_size: int) -> np.ndarray:
+	def standardize_batch(self, batch: np.ndarray) -> np.ndarray:
 		return (batch - self.__video_mean) / self.__video_std

@@ -1,6 +1,6 @@
 import os
-import sys
 import shutil
+import sys
 
 
 target_path = os.path.realpath(sys.argv[1])

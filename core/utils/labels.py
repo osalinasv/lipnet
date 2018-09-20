@@ -9,6 +9,7 @@ def text_to_labels(text: str) -> [chr]:
 			ret.append(ord(char) - ord('a'))
 		elif char == ' ':
 			ret.append(26)
+
 	return ret
 
 
@@ -20,4 +21,5 @@ def labels_to_text(labels: [chr]) -> str:
 			text += chr(c + ord('a'))
 		elif c == 26:
 			text += ' '
+
 	return text

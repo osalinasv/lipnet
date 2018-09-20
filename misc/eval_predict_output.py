@@ -1,13 +1,13 @@
 import argparse
 import csv
-import editdistance
-import numpy as np
 import os
 
-from colorama import init, Fore
-from common.files import is_file, get_file_extension
+import editdistance
+import numpy as np
+from colorama import Fore, init
+
+from common.files import get_file_extension, is_file
 from core.utils.wer import wer_sentence
-from functools import reduce
 
 
 init(autoreset=True)
@@ -26,36 +26,42 @@ def get_csv_data(path: str) -> [dict]:
 
 def get_aligns_data(path: str) -> {str: str}:
 	data = get_csv_data(path)
-	data = dict(map(lambda x: (x['Video'], x['Sentence']), data))
+	data = dict((x['Video'], x['Sentence']) for x in data)
 
 	return data
 
 
+def file_path_to_id(path: str) -> str:
+	return os.path.splitext(os.path.basename(path))[0]
+
+
 def get_input_data(path: str) -> {str: str}:
 	data = get_csv_data(path)
-
-	file_to_id = lambda x: os.path.splitext(os.path.basename(x))[0]
-	data = dict(map(lambda x: (file_to_id(x['file']), x['prediction']), data))
+	data = dict((file_path_to_id(x['file']), x['prediction']) for x in data)
 
 	return data
 
 
 def calculate_mean_generic(data: [tuple], mean_length: int, evaluator) -> (float, float):
-	values = list(map(lambda x: float(evaluator(x[0], x[1])), data))
+		values = [float(evaluator(x[0], x[1])) for x in data]
 
-	total = reduce(lambda x, y: x + y, values)
-	total_norm = reduce(lambda x, y: x + (y / mean_length), values)
+		total = 0
+		total_norm = 0
 
-	length = len(data)
-	return total / length, total_norm / length
+		for v in values:
+			total += v
+			total_norm += v / mean_length
+
+		length = len(data)
+		return total / length, total_norm / length
 
 
-def calculate_wer(data: [tuple]) ->  (float, float):
+def calculate_wer(data: [tuple]) -> (float, float):
 	mean_length = int(np.mean([len(d[1].split()) for d in data]))
 	return calculate_mean_generic(data, mean_length, wer_sentence)
 
 
-def calculate_cer(data: [tuple]) ->  (float, float):
+def calculate_cer(data: [tuple]) -> (float, float):
 	mean_length = int(np.mean([len(d[1]) for d in data]))
 	return calculate_mean_generic(data, mean_length, editdistance.eval)
 
@@ -76,14 +82,9 @@ def generate_output_dataset(input_data: {str: str}, aligns_data: {str: str}) -> 
 def main():
 	ap = argparse.ArgumentParser()
 
-	ap.add_argument('-i', '--input-path', required=True,
-		help='Path to the output CSV file')
-
-	ap.add_argument('-o', '--output-path', required=True,
-		help='Path to where the output will be saved')
-
-	ap.add_argument('-a', '--aligns-path', required=True,
-		help='Path to the aligns CSV file')
+	ap.add_argument('-i', '--input-path', required=True, help='Path to the output CSV file')
+	ap.add_argument('-o', '--output-path', required=True, help='Path to where the output will be saved')
+	ap.add_argument('-a', '--aligns-path', required=True, help='Path to the aligns CSV file')
 
 	args = vars(ap.parse_args())
 
@@ -109,7 +110,6 @@ def main():
 
 		writer.writerow(['id', 'refference', 'hypothesis', 'wer', 'cer'])
 		for x in dataset: writer.writerow([*x])
-
 
 	sample_batch = [(x[2], x[1]) for x in dataset]
 

@@ -1,9 +1,9 @@
-import env
-import core.model.layers as layers
-
 from keras import backend as k
 from keras.models import Model
 from keras.optimizers import Adam
+
+import core.model.layers as layers
+import env
 
 
 ADAM_LEARN_RATE = 0.0001
@@ -58,14 +58,15 @@ class LipNext(object):
 		self.model = Model(inputs=[self.input_layer, self.input_labels, self.input_length, self.label_length], outputs=self.loss_out)
 
 
-	def compile_model(self, optimizer = None):
-		if optimizer == None:
+	def compile_model(self, optimizer=None):
+		if optimizer is None:
 			optimizer = Adam(lr=ADAM_LEARN_RATE, beta_1=ADAM_F_MOMENTUM, beta_2=ADAM_S_MOMENTUM, epsilon=ADAM_STABILITY)
 
 		self.model.compile(loss={'ctc': lambda y_true, y_pred: y_pred}, optimizer=optimizer)
 
 
-	def get_input_shape(self, frame_count: int, image_channels: int, image_height: int, image_width: int) -> tuple:
+	@staticmethod
+	def get_input_shape(frame_count: int, image_channels: int, image_height: int, image_width: int) -> tuple:
 		if k.image_data_format() == 'channels_first':
 			return image_channels, frame_count, image_width, image_height
 		else:

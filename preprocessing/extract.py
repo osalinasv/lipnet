@@ -1,9 +1,11 @@
 import argparse
-import dlib
 import os
 
-from colorama import init, Fore, Style
-from common.files import is_dir, is_file, get_file_extension
+import dlib
+from colorama import Fore, Style, init
+
+from common.files import get_file_extension, get_file_name, get_files_in_dir, is_dir, is_file, make_dir_if_not_exists
+from preprocessing.extract_roi import video_to_frames
 
 
 init(autoreset=True)
@@ -12,10 +14,6 @@ init(autoreset=True)
 # set PYTHONPATH=%PYTHONPATH%;./
 # python preprocessing\extract.py -v D:\GRID\ -o data\dataset -lv 840
 def extract_to_npy(videos_path: str, output_path: str, predictor_path: str, pattern: str, first_video: int, last_video: int):
-	from common.files import get_files_in_dir, get_file_name, make_dir_if_not_exists
-	from preprocessing.extract_roi import video_to_frames
-
-
 	print('\nEXTRACT\n')
 
 	print('Searching for files in: {}'.format(videos_path))
@@ -93,25 +91,15 @@ def main():
 
 	ap = argparse.ArgumentParser()
 
-	ap.add_argument("-v",  "--videos-path", required=True,
-		help="Path to videos directory")
-
-	ap.add_argument("-o",  "--output-path", required=True, 
-		help="Path for the extracted frames")
+	ap.add_argument("-v",  "--videos-path", required=True, help="Path to videos directory")
+	ap.add_argument("-o",  "--output-path", required=True, help="Path for the extracted frames")
 
 	default_predictor = os.path.join(__file__, '..', '..', 'data', 'predictors', 'shape_predictor_68_face_landmarks.dat')
+	ap.add_argument("-pp", "--predictor-path", required=False, help="(Optional) Path to the predictor .dat file", default=default_predictor)
 
-	ap.add_argument("-pp", "--predictor-path", required=False,
-		help="(Optional) Path to the predictor .dat file", default=default_predictor)
-
-	ap.add_argument("-p",  "--pattern", required=False,
-		help="(Optional) File name pattern to match", default='*.mpg')
-
-	ap.add_argument("-fv", "--first-video", required=False,
-		help="(Optional) First video index extracted in each speaker (inclusive)", type=int, default=0)
-
-	ap.add_argument("-lv", "--last-video",  required=False,
-		help="(Optional) Last video index extracted in each speaker (exclusive)", type=int, default=1000)
+	ap.add_argument("-p",  "--pattern", required=False, help="(Optional) File name pattern to match", default='*.mpg')
+	ap.add_argument("-fv", "--first-video", required=False, help="(Optional) First video index extracted in each speaker (inclusive)", type=int, default=0)
+	ap.add_argument("-lv", "--last-video",  required=False, help="(Optional) Last video index extracted in each speaker (exclusive)", type=int, default=1000)
 
 	args = vars(ap.parse_args())
 

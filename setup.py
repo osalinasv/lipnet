@@ -1,14 +1,14 @@
 from setuptools import setup
 
 setup(
-	name             = 'lipnext',
-	version          = '0.1',
-	license          = 'Apache License, Version 2.0',
-	long_description = open('README.md').read(),
-	url              = "http://www.github.com/omarsalinas16/lipnext",
-	packages         = ['common', 'lipnext', 'preprocessing'],
-	zip_safe         = False,
-	install_requires = [
+	name            ='lipnext',
+	version         ='0.1',
+	license         ='Apache License, Version 2.0',
+	long_description=open('README.md').read(),
+	url             ="http://www.github.com/omarsalinas16/lipnext",
+	packages        =['common', 'lipnext', 'preprocessing'],
+	zip_safe        =False,
+	install_requires=[
 		'colorama==0.3.9',
 		'dlib==19.15.0',
 		'editdistance==0.4',

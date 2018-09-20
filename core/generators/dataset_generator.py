@@ -2,9 +2,9 @@ import os
 import pickle
 import random
 
-from common.files import is_file, get_files_in_dir, get_file_name, get_immediate_subdirs
-from core.helpers.align import align_from_file
+from common.files import get_file_name, get_files_in_dir, get_immediate_subdirs, is_file
 from core.generators.batch_generator import BatchGenerator
+from core.helpers.align import align_from_file
 
 
 class DatasetGenerator(object):
@@ -50,7 +50,8 @@ class DatasetGenerator(object):
 		self.val_generator   = BatchGenerator(val_videos, val_aligns, self.batch_size)
 
 
-	def get_numpy_files_in_dir(self, path: str) -> list:
+	@staticmethod
+	def get_numpy_files_in_dir(path: str) -> list:
 		return [f for f in get_files_in_dir(path, '*.npy')]
 
 
@@ -66,7 +67,8 @@ class DatasetGenerator(object):
 		return speaker_groups
 
 
-	def split_speaker_groups(self, groups: list, val_split: float) -> (list, list):
+	@staticmethod
+	def split_speaker_groups(groups: list, val_split: float) -> (list, list):
 		train_list = []
 		val_list   = []
 

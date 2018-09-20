@@ -1,13 +1,19 @@
 import argparse
 import csv
-import dlib
-import env
-import numpy as np
 import os
 
-from colorama import init, Fore
-from common.files import is_dir, is_file, get_file_extension, get_files_in_dir
+import dlib
+import numpy as np
+from colorama import Fore, init
+
+import env
+from common.files import get_file_extension, get_files_in_dir, is_dir, is_file
+from core.decoding.decoder import Decoder
+from core.decoding.spell import Spell
 from core.helpers.video import get_video_data_from_file, reshape_and_normalize_video_data
+from core.model.lipnext import LipNext
+from core.utils.labels import labels_to_text
+from core.utils.visualization import visualize_video_subtitle
 from preprocessing.extract_roi import extract_video_data
 
 
@@ -25,13 +31,6 @@ DECODER_BEAM_WIDTH = 200
 # python predict.py -w data\results\2018-08-28-00-04-11\w_0107_2.15.hdf5 -v data/dataset_eval
 # bin blue at f two now
 def predict(weights_file_path: str, video_path: str, predictor_path: str, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int):
-	from core.decoding.decoder import Decoder
-	from core.decoding.spell import Spell
-	from core.model.lipnext import LipNext
-	from core.utils.labels import labels_to_text
-	from core.utils.visualization import visualize_video_subtitle
-	
-	
 	print("\nPREDICTION\n")
 
 	video_path_is_file = is_file(video_path) and not is_dir(video_path)
@@ -51,8 +50,8 @@ def predict(weights_file_path: str, video_path: str, predictor_path: str, frame_
 
 	print('\nExtracting input video data...')
 
-	input_data = list(map(lambda x: (x, path_to_video_data(x, detector, predictor)), video_paths))
-	input_data = list(filter(lambda x: x[1] is not None, input_data))
+	input_data = [(x, path_to_video_data(x, detector, predictor)) for x in video_paths]
+	input_data = [x for x in input_data if x[1] is not None]
 
 	if len(input_data) <= 0:
 		print(Fore.RED + '\nNo valid video files were found, exiting.')
@@ -124,7 +123,7 @@ def predict(weights_file_path: str, video_path: str, predictor_path: str, frame_
 
 	if display_videos or visualize_videos:
 		for (i, v), r in zip(input_data, results):
-			if (display_videos):
+			if display_videos:
 				print('\nVideo: {}\n    Result: {}'.format(i, r))
 
 			if visualize_videos:
@@ -170,16 +169,11 @@ def main():
 
 	ap = argparse.ArgumentParser()
 
-	ap.add_argument('-v', '--video-path', required=True,
-		help='Path to video file or batch directory to analize')
+	ap.add_argument('-v', '--video-path', required=True, help='Path to video file or batch directory to analize')
+	ap.add_argument('-w', '--weights-path', required=True, help='Path to .hdf5 trained weights file')
 
-	ap.add_argument('-w', '--weights-path', required=True,
-		help='Path to .hdf5 trained weights file')
-
-	DEFAULT_PREDICTOR = os.path.join(__file__, '..', 'data', 'predictors', 'shape_predictor_68_face_landmarks.dat')
-
-	ap.add_argument("-pp", "--predictor-path", required=False,
-		help="(Optional) Path to the predictor .dat file", default=DEFAULT_PREDICTOR)
+	default_predictor = os.path.join(__file__, '..', 'data', 'predictors', 'shape_predictor_68_face_landmarks.dat')
+	ap.add_argument("-pp", "--predictor-path", required=False, help="(Optional) Path to the predictor .dat file", default=default_predictor)
 
 	args = vars(ap.parse_args())
 

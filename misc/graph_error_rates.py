@@ -1,12 +1,13 @@
 import argparse
 import csv
+import os
+
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
-import os
+from colorama import Fore, init
 
-from colorama import init, Fore
-from common.files import is_file, get_file_extension
+from common.files import get_file_extension, is_file
 
 
 init(autoreset=True)
@@ -25,10 +26,7 @@ tableau20 = [
 ]
 
 # Scale the RGB values to the [0, 1] range, which is the format matplotlib accepts.
-norm_rgb   = lambda x: x / 255.0
-norm_color = lambda x: tuple(map(norm_rgb, x))
-
-tableau20 = list(map(norm_color, tableau20))
+tableau20 = [tuple([c / 255.0 for c in color]) for color in tableau20]
 
 
 def get_data(path: str) -> (np.ndarray, np.ndarray):
@@ -44,9 +42,9 @@ def get_data(path: str) -> (np.ndarray, np.ndarray):
 	cer_norm = np.array([r['cer_norm'] for r in data], dtype=np.float32) * 100.0
 
 	return {
-		'wer'     : wer,
+		'wer':      wer,
 		'wer_norm': wer_norm,
-		'cer'     : cer,
+		'cer':      cer,
 		'cer_norm': cer_norm
 	}
 
@@ -96,7 +94,7 @@ def annotate_index(x: int, dataset: np.ndarray, ax: plt.Axes, formatter: str, of
 	bbox_props = dict(boxstyle="round,pad=0.35", fc="w", ec="k", lw=0.72)
 	arrow_props = dict(arrowstyle="-|>", connectionstyle="angle,angleA=0,angleB=60")
 
-	kw = dict(xycoords='data',textcoords="offset pixels", arrowprops=arrow_props, bbox=bbox_props, ha="right", va="top")
+	kw = dict(xycoords='data', textcoords="offset pixels", arrowprops=arrow_props, bbox=bbox_props, ha="right", va="top")
 
 	ax.annotate(text, xy=(x, y), xytext=offset, **kw)
 
@@ -149,11 +147,8 @@ def main():
 
 	ap = argparse.ArgumentParser()
 
-	ap.add_argument('-i', '--input-path', required=True,
-		help='Path to the error rates log CSV file')
-
-	ap.add_argument('-o', '--output-path', required=False,
-		help='Path to where the output will be saved', default=None)
+	ap.add_argument('-i', '--input-path', required=True, help='Path to the error rates log CSV file')
+	ap.add_argument('-o', '--output-path', required=False, help='Path to where the output will be saved', default=None)
 
 	args = vars(ap.parse_args())
 
@@ -185,9 +180,7 @@ def main():
 
 	plt.subplots_adjust(hspace=0.5)
 
-	plt.text(0, -32,
-		"Autor: Omar Adrian Salinas Villanueva\n"
-		"Universidad Autónoma de Ciudad Juárez", fontsize=8, alpha=0.6)
+	plt.text(0, -32, "Autor: Omar Adrian Salinas Villanueva\nUniversidad Autónoma de Ciudad Juárez", fontsize=8, alpha=0.6)
 
 	plt.savefig(output_path, bbox_inches="tight")
 	print('Saved output to: {}'.format(output_path))
