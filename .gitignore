@@ -165,3 +165,5 @@ venv.bak/
 data/*
 !data/dictionaries
 !data/predictors
+
+misc/
