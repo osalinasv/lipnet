@@ -99,4 +99,4 @@ class BatchGenerator(Sequence):
 
 
 	def standardize_batch(self, batch: np.ndarray) -> np.ndarray:
-		return (batch - self.__video_mean) / self.__video_std
+		return (batch - self.__video_mean) / (self.__video_std + 1e-6)
