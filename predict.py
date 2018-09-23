@@ -1,18 +1,19 @@
 import argparse
 import csv
 import os
+from typing import NamedTuple
 
-import dlib
 import numpy as np
+import skvideo.io
 from colorama import Fore, init
 
+import dlib
 import env
+from common.decode import create_decoder
 from common.files import get_file_extension, get_files_in_dir, is_dir, is_file
-from core.decoding.decoder import Decoder
-from core.decoding.spell import Spell
+from common.iters import chunks
 from core.helpers.video import get_video_data_from_file, reshape_and_normalize_video_data
 from core.model.lipnext import LipNext
-from core.utils.labels import labels_to_text
 from core.utils.visualization import visualize_video_subtitle
 from preprocessing.extract_roi import extract_video_data
 
@@ -21,141 +22,170 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 init(autoreset=True)
 
 
-ROOT_PATH          = os.path.dirname(os.path.realpath(__file__))
-DICTIONARY_PATH    = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'dictionaries', 'grid.txt'))
-DECODER_GREEDY     = True
-DECODER_BEAM_WIDTH = 200
+ROOT_PATH       = os.path.dirname(os.path.realpath(__file__))
+DICTIONARY_PATH = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'dictionaries', 'grid.txt'))
 
 
-# set PYTHONPATH=%PYTHONPATH%;./
-# python predict.py -w data\results\2018-08-28-00-04-11\w_0107_2.15.hdf5 -v data/dataset_eval
-# bin blue at f two now
-def predict(weights_file_path: str, video_path: str, predictor_path: str, frame_count: int, image_width: int, image_height: int, image_channels: int, max_string: int):
-	print("\nPREDICTION\n")
+class PredictConfig(NamedTuple):
+	weights:        str
+	video_path:     str
+	predictor_path: str
+	frame_count:    int = env.FRAME_COUNT
+	image_width:    int = env.IMAGE_WIDTH
+	image_height:   int = env.IMAGE_HEIGHT
+	image_channels: int = env.IMAGE_CHANNELS
+	max_string:     int = env.MAX_STRING
 
-	video_path_is_file = is_file(video_path) and not is_dir(video_path)
 
-	if video_path_is_file:
-		print('Predicting for video at: {}'.format(video_path))
-		video_paths = [video_path]
+def get_list_of_videos(path: str) -> [str]:
+	path_is_file = is_file(path) and not is_dir(path)
+
+	if path_is_file:
+		print('Predicting for video at: {}'.format(path))
+		video_paths = [path]
 	else:
-		print('Predicting batch at:     {}'.format(video_path))
-		video_paths = get_video_files_in_dir(video_path)
+		print('Predicting batch at: {}'.format(path))
+		video_paths = get_video_files_in_dir(path)
 
-	print('Loading weights at:      {}'.format(weights_file_path))
-	print('Using predictor at:      {}\n'.format(predictor_path))
-
-	detector  = dlib.get_frontal_face_detector()
-	predictor = dlib.shape_predictor(predictor_path)
-
-	print('\nExtracting input video data...')
-
-	input_data = [(x, path_to_video_data(x, detector, predictor)) for x in video_paths]
-	input_data = [x for x in input_data if x[1] is not None]
-
-	if len(input_data) <= 0:
-		print(Fore.RED + '\nNo valid video files were found, exiting.')
-		return
-
-	print('\nMaking predictions...')
-
-	lipnext = LipNext(frame_count, image_channels, image_height, image_width, max_string)
-	lipnext.compile_model()
-
-	lipnext.model.load_weights(weights_file_path)
-
-	x_data = np.array([x[1] for x in input_data])
-	y_pred = None
-
-	x_data_len = len(x_data)
-	batch_size = env.BATCH_SIZE
-	batch_iterations = int(np.ceil(x_data_len / batch_size))
-
-	elapsed_videos = 0
-
-	for idx in range(0, batch_iterations):
-		split_start = idx * batch_size
-		split_end   = split_start + batch_size
-
-		if split_end > x_data_len:
-			split_end = x_data_len
-
-		elapsed_videos += split_end - split_start
-		videos_batch = x_data[split_start:split_end]
-
-		if y_pred is None:
-			y_pred = lipnext.predict(videos_batch)
-		else:
-			y_pred = np.append(y_pred, lipnext.predict(videos_batch), axis=0)
-
-		print('Predicted [{}/{}] videos ({}/{})'.format(elapsed_videos, x_data_len, idx + 1, batch_iterations))
-
-	spell   = Spell(DICTIONARY_PATH)
-	decoder = Decoder(greedy=DECODER_GREEDY, beam_width=DECODER_BEAM_WIDTH, postprocessors=[labels_to_text, spell.sentence])
-
-	input_length = np.array([len(x) for x in x_data])
-	results = decoder.decode(y_pred, input_length)
-
-	print('\n\nRESULTS:\n')
-
-	display_input  = input('Display outputs in console [Y/n]? ')
-	display_videos = True if not display_input or display_input.lower()[0] == 'y' else False
-
-	visualize_input  = input('Visualize results as video captions [y/N]? ')
-	visualize_videos = visualize_input and visualize_input.lower()[0] == 'y'
-
-	print()
-
-	save_csv_input = input('Save outputs to CSV [y/N]? ')
-	save_csv = save_csv_input and save_csv_input.lower()[0] == 'y'
-	output_csv_path = None
-
-	if save_csv:
-		output_csv_path = input('Output CSV name (default is \'output\'): ')
-
-		if not output_csv_path:
-			output_csv_path = 'output.csv'
-
-		if not output_csv_path.endswith('.csv'):
-			output_csv_path += '.csv'
-
-		output_csv_path = os.path.realpath(output_csv_path)
-
-	if display_videos or visualize_videos:
-		for (i, v), r in zip(input_data, results):
-			if display_videos:
-				print('\nVideo: {}\n    Result: {}'.format(i, r))
-
-			if visualize_videos:
-				visualize_video_subtitle(v, r)
-
-	if save_csv and output_csv_path:
-		output_csv_already_existed = os.path.exists(output_csv_path)
-
-		with open(output_csv_path, 'w') as f:
-			writer = csv.writer(f)
-
-			if not output_csv_already_existed:
-				writer.writerow(['file', 'prediction'])
-
-			for (i, _), r in zip(input_data, results):
-				writer.writerow([i, r])
+	return video_paths
 
 
 def get_video_files_in_dir(path: str) -> [str]:
 	return [f for ext in ['*.mpg', '*.npy'] for f in get_files_in_dir(path, ext)]
 
 
-def path_to_video_data(path: str, detector, predictor) -> np.ndarray:
+def get_video_data(path: str, detector, predictor) -> np.ndarray:
 	if get_file_extension(path) == '.mpg':
-		data = extract_video_data(path, detector, predictor)
-
-		if data is not None:
-			data = reshape_and_normalize_video_data(data)
-
-		return data
+		data = extract_video_data(path, detector, predictor, False)
+		return reshape_and_normalize_video_data(data) if data is not None else None
 	else:
 		return get_video_data_from_file(path)
+
+
+def get_entire_video_data(path: str) -> np.ndarray:
+	if get_file_extension(path) == '.mpg':
+		return np.swapaxes(skvideo.io.vread(path), 1, 2)
+	else:
+		return get_video_data_from_file(path)
+
+
+def predict_batches(lipnext: LipNext, video_paths: [str], predictor_path: str):
+	batch_size = env.BATCH_SIZE
+
+	detector  = dlib.get_frontal_face_detector()
+	predictor = dlib.shape_predictor(predictor_path)
+
+	for paths in chunks(video_paths, batch_size):
+		input_data = [(p, get_video_data(p, detector, predictor)) for p in paths]
+		input_data = [x for x in input_data if x[1] is not None]
+
+		if len(input_data) <= 0: continue
+
+		valid_paths = [x[0] for x in input_data]
+
+		x_data  = np.array([x[1] for x in input_data])
+		lengths = [len(x) for x in x_data]
+
+		y_pred = lipnext.predict(x_data)
+
+		yield (valid_paths, lengths, y_pred)
+
+
+def decode_predictions(y_pred: np.ndarray, input_lengths: list) -> list:
+	decoder = create_decoder(DICTIONARY_PATH)
+	input_lengths = np.array(input_lengths)
+
+	return decoder.decode(y_pred, input_lengths)
+
+
+def query_yes_no(query: str, default: bool=True) -> bool:
+	prompt = '[Y/n]' if default else '[y/N]'
+	inp = input(query + ' ' + prompt + ' ')
+
+	return default if not inp else inp.lower()[0] == 'y'
+
+
+def query_save_csv_path(default: str='output.csv'):
+	path = input('Output CSV name (default is \'{}\'): '.format(default))
+
+	if not path: path = default
+	if not path.endswith('.csv'): path += '.csv'
+
+	return os.path.realpath(path)
+
+
+def display_results(valid_paths: list, results: list, display: bool=True, visualize: bool=False):
+	if not display and not bool: return
+	
+	for p, r in zip(valid_paths, results):
+		if display: print('\nVideo: {}\n    Result: {}'.format(p, r))
+
+		if visualize:
+			v = get_entire_video_data(p)
+			visualize_video_subtitle(v, r)
+
+
+def write_results_to_csv(path: str, valid_paths: list, results: list):
+	already_exists = os.path.exists(path)
+
+	with open(path, 'w') as f:
+		writer = csv.writer(f)
+
+		if not already_exists:
+			writer.writerow(['file', 'prediction'])
+
+		for p, r in zip(valid_paths, results):
+			writer.writerow([p, r])
+
+
+# set PYTHONPATH=%PYTHONPATH%;./
+# python predict.py -w data\results\2018-08-28-00-04-11\w_0107_2.15.hdf5 -v data/dataset_eval
+# bin blue at f two now
+def predict(config: PredictConfig):
+	print("\nPREDICTION\n")
+
+	print('Loading weights at: {}'.format(config.weights))
+	print('Using predictor at: {}\n'.format(config.predictor_path))
+
+	print('\nMaking predictions...\n')
+
+	lipnext = LipNext(config.frame_count, config.image_channels, config.image_height, config.image_width, config.max_string).compile_model().load_weights(config.weights)
+
+	valid_paths   = []
+	input_lengths = []
+	predictions   = None
+
+	elapsed_videos = 0
+	video_paths = get_list_of_videos(config.video_path)
+
+	for paths, lengths, y_pred in predict_batches(lipnext, video_paths, config.predictor_path):
+		valid_paths   += paths
+		input_lengths += lengths
+
+		predictions = y_pred if predictions is None else np.append(predictions, y_pred, axis=0)
+
+		y_pred_len = len(y_pred)
+		elapsed_videos += y_pred_len
+
+		print('Predicted batch of {} videos\t({} elapsed)'.format(y_pred_len, elapsed_videos))
+
+	results = decode_predictions(predictions, input_lengths)
+
+	print('\n\nRESULTS:\n')
+
+	display   = query_yes_no('List all prediction outputs?', True)
+	visualize = query_yes_no('Visualize as video captions?', False)
+
+	print()
+
+	save_csv = query_yes_no('Save prediction outputs to a .csv file?', True)
+
+	if save_csv:
+		csv_path = query_save_csv_path()
+		write_results_to_csv(csv_path, valid_paths, results)
+	
+	if display or visualize:
+		display_results(valid_paths, results, display, visualize)
 
 
 def main():
@@ -192,8 +222,9 @@ def main():
 	if not is_file(predictor_path) or get_file_extension(predictor_path) != '.dat':
 		print(Fore.RED + '\nERROR: Predictor path is not a valid file')
 		return
-	
-	predict(weights, video, predictor_path, env.FRAME_COUNT, env.IMAGE_WIDTH, env.IMAGE_HEIGHT, env.IMAGE_CHANNELS, env.MAX_STRING)
+
+	config = PredictConfig(weights, video, predictor_path)
+	predict(config)
 
 
 if __name__ == '__main__':

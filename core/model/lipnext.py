@@ -63,6 +63,12 @@ class LipNext(object):
 			optimizer = Adam(lr=ADAM_LEARN_RATE, beta_1=ADAM_F_MOMENTUM, beta_2=ADAM_S_MOMENTUM, epsilon=ADAM_STABILITY)
 
 		self.model.compile(loss={'ctc': lambda y_true, y_pred: y_pred}, optimizer=optimizer)
+		return self
+
+
+	def load_weights(self, path: str):
+		self.model.load_weights(path)
+		return self
 
 
 	@staticmethod

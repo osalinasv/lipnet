@@ -33,8 +33,8 @@ def video_to_frames(video_path: str, output_path: str, detector, predictor) -> b
 		return True
 
 
-def extract_video_data(path: str, detector, predictor) -> Optional[np.ndarray]:
-	print('\n{}'.format(path))
+def extract_video_data(path: str, detector, predictor, verbose: bool=True) -> Optional[np.ndarray]:
+	if verbose: print('\n{}'.format(path))
 	
 	video_data     = skvideo.io.vread(path)
 	video_data_len = len(video_data)
@@ -44,17 +44,17 @@ def extract_video_data(path: str, detector, predictor) -> Optional[np.ndarray]:
 		return None
 
 	mouth_data = []
-	bar = ShadyBar(get_file_name(path) + '.npy', max=video_data_len, suffix='%(percent)d%% [%(elapsed_td)s]')
+	bar = ShadyBar(get_file_name(path) + '.npy', max=video_data_len, suffix='%(percent)d%% [%(elapsed_td)s]') if verbose else None
 
 	for i, f in enumerate(video_data):
 		c = extract_mouth_on_frame(f, detector, predictor, i)
 		if c is None: return None
 		mouth_data.append(c)
 
-		bar.next()
+		if verbose and bar: bar.next()
 
 	mouth_data = np.array(mouth_data)
-	bar.finish()
+	if verbose and bar: bar.finish()
 
 	return mouth_data
 
