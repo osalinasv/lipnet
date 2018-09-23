@@ -12,7 +12,7 @@ class BatchGenerator(Sequence):
 	__video_std  = np.array([env.STD_R, env.STD_G, env.STD_B])
 
 
-	def __init__(self, video_paths: list, align_hash: dict, batch_size: int):
+	def __init__(self, video_paths: [str], align_hash: dict, batch_size: int):
 		super().__init__()
 		
 		self.video_paths = video_paths
@@ -48,11 +48,11 @@ class BatchGenerator(Sequence):
 		sentences = []
 
 		for path in videos_batch:
-			video_data, sentence, label, label_len = self.get_data_from_path(path)
+			video_data, sentence, labels, length = self.get_data_from_path(path)
 
 			x_data.append(video_data)
-			y_data.append(label)
-			label_length.append(label_len)
+			y_data.append(labels)
+			label_length.append(length)
 			input_length.append(len(video_data))
 			sentences.append(sentence)
 
@@ -62,8 +62,8 @@ class BatchGenerator(Sequence):
 				f_video_data = self.flip_video(video_data)
 
 				x_data.append(f_video_data)
-				y_data.append(label)
-				label_length.append(label_len)
+				y_data.append(labels)
+				label_length.append(length)
 				input_length.append(len(video_data))
 				sentences.append(sentence)
 		
@@ -88,9 +88,9 @@ class BatchGenerator(Sequence):
 		return inputs, outputs
 
 
-	def get_data_from_path(self, path: str) -> (np.ndarray, np.ndarray, int, str):
-		# video_data, sentence, label, label_len
-		return (get_video_data_from_file(path), *self.align_hash[get_file_name(path)])
+	def get_data_from_path(self, path: str) -> (np.ndarray, str, np.ndarray, int):
+		align = self.align_hash[get_file_name(path)]
+		return get_video_data_from_file(path), align.sentence, align.labels, align.length
 
 
 	@staticmethod

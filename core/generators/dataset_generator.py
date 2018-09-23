@@ -4,7 +4,7 @@ import random
 
 from common.files import get_file_name, get_files_in_dir, get_immediate_subdirs, is_file
 from core.generators.batch_generator import BatchGenerator
-from core.helpers.align import align_from_file
+from core.helpers.align import Align, align_from_file
 
 
 class DatasetGenerator(object):
@@ -82,7 +82,7 @@ class DatasetGenerator(object):
 		return train_list, val_list
 
 
-	def generate_align_hash(self, videos: list) -> dict:
+	def generate_align_hash(self, videos: list) -> {str: Align}:
 		align_hash = {}
 
 		for path in videos:

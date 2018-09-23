@@ -15,7 +15,6 @@ from common.files import get_file_name
 init(autoreset=True)
 
 
-VIDEO_SHAPE = (env.FRAME_COUNT, env.IMAGE_HEIGHT, env.IMAGE_WIDTH, env.IMAGE_CHANNELS)
 FRAME_SHAPE = (env.IMAGE_HEIGHT, env.IMAGE_WIDTH, env.IMAGE_CHANNELS)
 IMAGE_SIZE  = (env.IMAGE_HEIGHT, env.IMAGE_WIDTH)
 ERROR_LOG   = Back.RED + Fore.BLACK + 'ERROR: '

@@ -1,12 +1,19 @@
 import numpy as np
 
 from core.utils.labels import text_to_labels
+from typing import NamedTuple
 
 
 __SILENCE_TOKENS = ['sp', 'sil']
 
 
-def align_from_file(path: str, max_string: int) -> (str, np.ndarray, int):
+class Align(NamedTuple):
+	sentence: str
+	labels:   np.ndarray
+	length:   int
+
+
+def align_from_file(path: str, max_string: int) -> Align:
 	with open(path, 'r') as f:
 		lines = f.readlines()
 
@@ -15,9 +22,9 @@ def align_from_file(path: str, max_string: int) -> (str, np.ndarray, int):
 
 	sentence = __get_align_sentence(align, __SILENCE_TOKENS)
 	labels   = __get_sentence_labels(sentence)
-	padded_label = __get_padded_label(labels, max_string)
+	padded_labels = __get_padded_label(labels, max_string)
 
-	return sentence, padded_label, len(labels)
+	return Align(sentence, padded_labels, len(labels))
 
 
 def __strip_from_align(align: list, items: list) -> list:
