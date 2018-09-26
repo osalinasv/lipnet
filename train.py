@@ -25,6 +25,8 @@ LOG_DIR    = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'logs'))
 DICTIONARY_PATH = os.path.realpath(os.path.join(ROOT_PATH, 'data', 'dictionaries', 'grid.txt'))
 
 
+# python train.py -d data\dataset -a data\aligns -e 120
+
 class TrainingConfig(NamedTuple):
 	dataset_path:   str
 	aligns_path:    str
@@ -77,6 +79,8 @@ def train(run_name: str, config: TrainingConfig):
 
 	lipnext = LipNext(config.frame_count, config.image_channels, config.image_height, config.image_width, config.max_string).compile_model()
 
+	lipnext.model.load_weights('data/results/2018-09-23-01-16-48/w_0055_2.32.hdf5')
+
 	datagen = DatasetGenerator(config.dataset_path, config.aligns_path, config.batch_size, config.max_string, config.val_split, config.use_cache)
 
 	callbacks = create_callbacks(run_name, lipnext, datagen)
@@ -90,7 +94,7 @@ def train(run_name: str, config: TrainingConfig):
 		verbose        =1,
 		shuffle        =True,
 		max_queue_size =5,
-		workers        =3,
+		workers        =2,
 		callbacks      =callbacks,
 		use_multiprocessing=True
 	)
