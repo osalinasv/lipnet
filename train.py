@@ -44,26 +44,26 @@ class TrainingConfig(NamedTuple):
 def create_callbacks(run_name: str, lipnext: LipNext, datagen: DatasetGenerator) -> list:
 	# Tensorboard
 	run_log_dir = os.path.join(LOG_DIR, run_name)
-	tensorboard = TensorBoard(log_dir=run_log_dir)
+	# tensorboard = TensorBoard(log_dir=run_log_dir)
 
 	# Training logger
-	csv_log_dir = os.path.join(run_log_dir, '{}_train.csv'.format(run_name))
-	csv_logger  = CSVLogger(csv_log_dir, separator=',', append=True)
+	csv_log    = os.path.join(run_log_dir, '{}_train.csv'.format(run_name))
+	csv_logger = CSVLogger(csv_log, separator=',', append=True)
 
 	# Model checkpoint saver
 	checkpoint_dir = os.path.join(OUTPUT_DIR, run_name)
 	make_dir_if_not_exists(checkpoint_dir)
 
-	checkpoint_template = os.path.join(checkpoint_dir, "w_{epoch:04d}_{val_loss:.2f}.hdf5")
+	checkpoint_template = os.path.join(checkpoint_dir, "lipnext_{epoch:03d}_{val_loss:.2f}.hdf5")
 	checkpoint = ModelCheckpoint(checkpoint_template, monitor='val_loss', save_weights_only=True, mode='auto', period=1, verbose=1)
 
 	# WER/CER Error rate calculator
-	error_rate_log_dir = os.path.join(run_log_dir, '{}_error_rate.csv'.format(run_name))
+	error_rate_log = os.path.join(run_log_dir, '{}_error_rates.csv'.format(run_name))
 
 	decoder = create_decoder(DICTIONARY_PATH, False)
-	error_rates = ErrorRates(error_rate_log_dir, lipnext, datagen.val_generator, decoder)
+	error_rates = ErrorRates(error_rate_log, lipnext, datagen.val_generator, decoder)
 
-	return [checkpoint, tensorboard, csv_logger, error_rates]
+	return [checkpoint, csv_logger, error_rates]
 
 
 def train(run_name: str, config: TrainingConfig):
@@ -78,8 +78,6 @@ def train(run_name: str, config: TrainingConfig):
 	make_dir_if_not_exists(LOG_DIR)
 
 	lipnext = LipNext(config.frame_count, config.image_channels, config.image_height, config.image_width, config.max_string).compile_model()
-
-	lipnext.model.load_weights('data/results/2018-09-23-01-16-48/w_0055_2.32.hdf5')
 
 	datagen = DatasetGenerator(config.dataset_path, config.aligns_path, config.batch_size, config.max_string, config.val_split, config.use_cache)
 
@@ -135,7 +133,7 @@ def main():
 		print(Fore.RED + '\nERROR: The number of epochs must be a valid integer greater than zero')
 		return
 
-	name   = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+	name   = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M')
 	config = TrainingConfig(dataset_path, aligns_path, epochs=epochs)
 
 	train(name, config)
