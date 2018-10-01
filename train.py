@@ -42,12 +42,14 @@ class TrainingConfig(NamedTuple):
 
 
 def create_callbacks(run_name: str, lipnext: LipNext, datagen: DatasetGenerator) -> list:
-	# Tensorboard
 	run_log_dir = os.path.join(LOG_DIR, run_name)
+	make_dir_if_not_exists(run_log_dir)
+
+	# Tensorboard
 	# tensorboard = TensorBoard(log_dir=run_log_dir)
 
 	# Training logger
-	csv_log    = os.path.join(run_log_dir, '{}_train.csv'.format(run_name))
+	csv_log    = os.path.join(run_log_dir, 'training.csv')
 	csv_logger = CSVLogger(csv_log, separator=',', append=True)
 
 	# Model checkpoint saver
@@ -58,7 +60,7 @@ def create_callbacks(run_name: str, lipnext: LipNext, datagen: DatasetGenerator)
 	checkpoint = ModelCheckpoint(checkpoint_template, monitor='val_loss', save_weights_only=True, mode='auto', period=1, verbose=1)
 
 	# WER/CER Error rate calculator
-	error_rate_log = os.path.join(run_log_dir, '{}_error_rates.csv'.format(run_name))
+	error_rate_log = os.path.join(run_log_dir, 'error_rates.csv')
 
 	decoder = create_decoder(DICTIONARY_PATH, False)
 	error_rates = ErrorRates(error_rate_log, lipnext, datagen.val_generator, decoder)

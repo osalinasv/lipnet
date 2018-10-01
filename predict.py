@@ -91,10 +91,8 @@ def predict_batches(lipnext: LipNext, video_paths: [str], predictor_path: str):
 		yield (valid_paths, lengths, y_pred)
 
 
-def decode_predictions(y_pred: np.ndarray, input_lengths: list) -> list:
-	decoder = create_decoder(DICTIONARY_PATH)
+def decode_predictions(y_pred: np.ndarray, input_lengths: list, decoder) -> list:
 	input_lengths = np.array(input_lengths)
-
 	return decoder.decode(y_pred, input_lengths)
 
 
@@ -169,7 +167,8 @@ def predict(config: PredictConfig):
 
 		print('Predicted batch of {} videos\t({} elapsed)'.format(y_pred_len, elapsed_videos))
 
-	results = decode_predictions(predictions, input_lengths)
+	decoder = create_decoder(DICTIONARY_PATH)
+	results = decode_predictions(predictions, input_lengths, decoder)
 
 	print('\n\nRESULTS:\n')
 
