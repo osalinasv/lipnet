@@ -87,7 +87,7 @@ def main():
 
 
 def train(run_name: str, config: TrainingConfig):
-	print("\nTRAINING\n\nRunning: {}\n".format(run_name))
+	print("\nTRAINING: {}\n".format(run_name))
 
 	print('For dataset at: {}'.format(config.dataset_path))
 	print('With aligns at: {}'.format(config.aligns_path))

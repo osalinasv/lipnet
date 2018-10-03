@@ -61,7 +61,26 @@ The training is configured to use multiprocessing with 2 workers by default.
 
 ### Evaluating
 
-...
+Use the `predict.py` script to analyze a video or a directory of videos with a trained model:
+
+```
+usage: python predict.py [-h] -v VIDEO_PATH -w WEIGHTS_PATH [-pp PREDICTOR_PATH]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v VIDEO_PATH, --video-path VIDEO_PATH
+                        Path to video file or batch directory to analize
+  -w WEIGHTS_PATH, --weights-path WEIGHTS_PATH
+                        Path to .hdf5 trained weights file
+  -pp PREDICTOR_PATH, --predictor-path PREDICTOR_PATH
+                        (Optional) Path to the predictor .dat file
+```
+
+i.e:
+
+```
+python predict.py -w data/res/2018-09-26-02-30/lipnext_065_1.96.hdf5 -v data/dataset_eval
+```
 
 ## To-do List
 

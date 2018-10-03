@@ -37,6 +37,98 @@ class PredictConfig(NamedTuple):
 	max_string:     int = env.MAX_STRING
 
 
+def main():
+	"""
+	Entry point of the script for using a trained model for predicting videos.
+	i.e: python predict.py -w data/res/2018-09-26-02-30/lipnext_065_1.96.hdf5 -v data/dataset_eval
+	"""
+
+	print(r'''
+   __         __     ______   __   __     ______     __  __     ______  
+  /\ \       /\ \   /\  == \ /\ "-.\ \   /\  ___\   /\_\_\_\   /\__  _\ 
+  \ \ \____  \ \ \  \ \  _-/ \ \ \-.  \  \ \  __\   \/_/\_\/_  \/_/\ \/ 
+   \ \_____\  \ \_\  \ \_\    \ \_\\"\_\  \ \_____\   /\_\/\_\    \ \_\ 
+    \/_____/   \/_/   \/_/     \/_/ \/_/   \/_____/   \/_/\/_/     \/_/ 
+	''')
+
+	ap = argparse.ArgumentParser()
+
+	ap.add_argument('-v', '--video-path', required=True, help='Path to video file or batch directory to analize')
+	ap.add_argument('-w', '--weights-path', required=True, help='Path to .hdf5 trained weights file')
+
+	default_predictor = os.path.join(__file__, '..', 'data', 'predictors', 'shape_predictor_68_face_landmarks.dat')
+	ap.add_argument("-pp", "--predictor-path", required=False, help="(Optional) Path to the predictor .dat file", default=default_predictor)
+
+	args = vars(ap.parse_args())
+
+	weights        = os.path.realpath(args['weights_path'])
+	video          = os.path.realpath(args['video_path'])
+	predictor_path = os.path.realpath(args["predictor_path"])
+
+	if not is_file(weights) or get_file_extension(weights) != '.hdf5':
+		print(Fore.RED + '\nERROR: Trained weights path is not a valid file')
+		return
+
+	if not is_file(video) and not is_dir(video):
+		print(Fore.RED + '\nERROR: Path does not point to a video file nor to a directory')
+		return
+
+	if not is_file(predictor_path) or get_file_extension(predictor_path) != '.dat':
+		print(Fore.RED + '\nERROR: Predictor path is not a valid file')
+		return
+
+	config = PredictConfig(weights, video, predictor_path)
+	predict(config)
+
+
+def predict(config: PredictConfig):
+	print("\nPREDICTION\n")
+
+	print('Loading weights at: {}'.format(config.weights))
+	print('Using predictor at: {}'.format(config.predictor_path))
+
+	print('\nMaking predictions...\n')
+
+	lipnext = LipNext(config.frame_count, config.image_channels, config.image_height, config.image_width, config.max_string).compile_model().load_weights(config.weights)
+
+	valid_paths   = []
+	input_lengths = []
+	predictions   = None
+
+	elapsed_videos = 0
+	video_paths = get_list_of_videos(config.video_path)
+
+	for paths, lengths, y_pred in predict_batches(lipnext, video_paths, config.predictor_path):
+		valid_paths   += paths
+		input_lengths += lengths
+
+		predictions = y_pred if predictions is None else np.append(predictions, y_pred, axis=0)
+
+		y_pred_len = len(y_pred)
+		elapsed_videos += y_pred_len
+
+		print('Predicted batch of {} videos\t({} elapsed)'.format(y_pred_len, elapsed_videos))
+
+	decoder = create_decoder(DICTIONARY_PATH)
+	results = decode_predictions(predictions, input_lengths, decoder)
+
+	print('\n\nRESULTS:\n')
+
+	display   = query_yes_no('List all prediction outputs?', True)
+	visualize = query_yes_no('Visualize as video captions?', False)
+
+	print()
+
+	save_csv = query_yes_no('Save prediction outputs to a .csv file?', True)
+
+	if save_csv:
+		csv_path = query_save_csv_path()
+		write_results_to_csv(csv_path, valid_paths, results)
+	
+	if display or visualize:
+		display_results(valid_paths, results, display, visualize)
+
+
 def get_list_of_videos(path: str) -> [str]:
 	path_is_file = is_file(path) and not is_dir(path)
 
@@ -134,96 +226,6 @@ def write_results_to_csv(path: str, valid_paths: list, results: list):
 
 		for p, r in zip(valid_paths, results):
 			writer.writerow([p, r])
-
-
-# set PYTHONPATH=%PYTHONPATH%;./
-# python predict.py -w data\results\2018-08-28-00-04-11\w_0107_2.15.hdf5 -v data/dataset_eval
-# bin blue at f two now
-def predict(config: PredictConfig):
-	print("\nPREDICTION\n")
-
-	print('Loading weights at: {}'.format(config.weights))
-	print('Using predictor at: {}\n'.format(config.predictor_path))
-
-	print('\nMaking predictions...\n')
-
-	lipnext = LipNext(config.frame_count, config.image_channels, config.image_height, config.image_width, config.max_string).compile_model().load_weights(config.weights)
-
-	valid_paths   = []
-	input_lengths = []
-	predictions   = None
-
-	elapsed_videos = 0
-	video_paths = get_list_of_videos(config.video_path)
-
-	for paths, lengths, y_pred in predict_batches(lipnext, video_paths, config.predictor_path):
-		valid_paths   += paths
-		input_lengths += lengths
-
-		predictions = y_pred if predictions is None else np.append(predictions, y_pred, axis=0)
-
-		y_pred_len = len(y_pred)
-		elapsed_videos += y_pred_len
-
-		print('Predicted batch of {} videos\t({} elapsed)'.format(y_pred_len, elapsed_videos))
-
-	decoder = create_decoder(DICTIONARY_PATH)
-	results = decode_predictions(predictions, input_lengths, decoder)
-
-	print('\n\nRESULTS:\n')
-
-	display   = query_yes_no('List all prediction outputs?', True)
-	visualize = query_yes_no('Visualize as video captions?', False)
-
-	print()
-
-	save_csv = query_yes_no('Save prediction outputs to a .csv file?', True)
-
-	if save_csv:
-		csv_path = query_save_csv_path()
-		write_results_to_csv(csv_path, valid_paths, results)
-	
-	if display or visualize:
-		display_results(valid_paths, results, display, visualize)
-
-
-def main():
-	print(r'''
-   __         __     ______   __   __     ______     __  __     ______  
-  /\ \       /\ \   /\  == \ /\ "-.\ \   /\  ___\   /\_\_\_\   /\__  _\ 
-  \ \ \____  \ \ \  \ \  _-/ \ \ \-.  \  \ \  __\   \/_/\_\/_  \/_/\ \/ 
-   \ \_____\  \ \_\  \ \_\    \ \_\\"\_\  \ \_____\   /\_\/\_\    \ \_\ 
-    \/_____/   \/_/   \/_/     \/_/ \/_/   \/_____/   \/_/\/_/     \/_/ 
-	''')
-
-	ap = argparse.ArgumentParser()
-
-	ap.add_argument('-v', '--video-path', required=True, help='Path to video file or batch directory to analize')
-	ap.add_argument('-w', '--weights-path', required=True, help='Path to .hdf5 trained weights file')
-
-	default_predictor = os.path.join(__file__, '..', 'data', 'predictors', 'shape_predictor_68_face_landmarks.dat')
-	ap.add_argument("-pp", "--predictor-path", required=False, help="(Optional) Path to the predictor .dat file", default=default_predictor)
-
-	args = vars(ap.parse_args())
-
-	weights        = os.path.realpath(args['weights_path'])
-	video          = os.path.realpath(args['video_path'])
-	predictor_path = os.path.realpath(args["predictor_path"])
-
-	if not is_file(weights) or get_file_extension(weights) != '.hdf5':
-		print(Fore.RED + '\nERROR: Trained weights path is not a valid file')
-		return
-
-	if not is_file(video) and not is_dir(video):
-		print(Fore.RED + '\nERROR: Path does not point to a video file nor to a directory')
-		return
-
-	if not is_file(predictor_path) or get_file_extension(predictor_path) != '.dat':
-		print(Fore.RED + '\nERROR: Predictor path is not a valid file')
-		return
-
-	config = PredictConfig(weights, video, predictor_path)
-	predict(config)
 
 
 if __name__ == '__main__':
