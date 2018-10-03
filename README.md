@@ -34,7 +34,30 @@ Windows:
 
 ### Training
 
-...
+Use the `train.py` script to start training a model after preprocesing your dataset. You'll also need to provide a directory containing individual align files with the expected sentence:
+
+```
+usage: python train.py [-h] -d DATASET_PATH -a ALIGNS_PATH [-e EPOCHS] [-ic]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d DATASET_PATH, --dataset-path DATASET_PATH
+                        Path to the dataset root directory
+  -a ALIGNS_PATH, --aligns-path ALIGNS_PATH
+                        Path to the directory containing all align files
+  -e EPOCHS, --epochs EPOCHS
+                        (Optional) Number of epochs to run
+  -ic, --ignore-cache   (Optional) Force the generator to ignore the cache
+                        file
+```
+
+i.e:
+
+```
+python train.py -d data/dataset -a data/aligns -e 70
+```
+
+The training is configured to use multiprocessing with 2 workers by default.
 
 ### Evaluating
 
