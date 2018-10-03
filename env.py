@@ -1,27 +1,18 @@
-import os
+FRAME_COUNT    = 75
+IMAGE_WIDTH    = 100
+IMAGE_HEIGHT   = 50
+IMAGE_CHANNELS = 3
 
-from dotenv import load_dotenv
+MAX_STRING  = 32
+OUTPUT_SIZE = 28
 
+BATCH_SIZE = 50
+VAL_SPLIT  = 0.2
 
-ENV_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), '.env'))
-load_dotenv(dotenv_path=ENV_PATH)
+MEAN_R = 0.6882
+MEAN_G = 0.5057
+MEAN_B = 0.3344
 
-
-FRAME_COUNT    = int(os.getenv('FRAME_COUNT'))
-IMAGE_WIDTH    = int(os.getenv('IMAGE_WIDTH'))
-IMAGE_HEIGHT   = int(os.getenv('IMAGE_HEIGHT'))
-IMAGE_CHANNELS = int(os.getenv('IMAGE_CHANNELS'))
-
-MAX_STRING  = int(os.getenv('MAX_STRING'))
-OUTPUT_SIZE = int(os.getenv('OUTPUT_SIZE'))
-
-BATCH_SIZE = int(os.getenv('BATCH_SIZE'))
-VAL_SPLIT  = float(os.getenv('VAL_SPLIT'))
-
-MEAN_R = float(os.getenv('MEAN_R'))
-MEAN_G = float(os.getenv('MEAN_G'))
-MEAN_B = float(os.getenv('MEAN_B'))
-
-STD_R = float(os.getenv('STD_R'))
-STD_G = float(os.getenv('STD_G'))
-STD_B = float(os.getenv('STD_B'))
+STD_R = 0.1629
+STD_G = 0.1205
+STD_B = 0.1257
