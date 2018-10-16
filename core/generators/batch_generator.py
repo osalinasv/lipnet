@@ -8,8 +8,8 @@ from core.helpers.video import get_video_data_from_file
 
 class BatchGenerator(Sequence):
 
-	# __video_mean = np.array([env.MEAN_R, env.MEAN_G, env.MEAN_B])
-	# __video_std  = np.array([env.STD_R, env.STD_G, env.STD_B])
+	__video_mean = np.array([env.MEAN_R, env.MEAN_G, env.MEAN_B])
+	__video_std  = np.array([env.STD_R, env.STD_G, env.STD_B])
 
 
 	def __init__(self, video_paths: [str], align_hash: dict, batch_size: int):
@@ -70,8 +70,7 @@ class BatchGenerator(Sequence):
 		batch_size = len(x_data)
 
 		x_data = np.array(x_data)
-		# standardization is not working correctly
-		# x_data = self.standardize_batch(x_data)
+		x_data = self.standardize_batch(x_data)
 
 		y_data = np.array(y_data)
 		input_length = np.array(input_length)
@@ -101,5 +100,5 @@ class BatchGenerator(Sequence):
 		return np.flip(video_data, axis=1)  # flip in the vertical axis because videos are flipped 90deg when passed to the model
 
 
-	# def standardize_batch(self, batch: np.ndarray) -> np.ndarray:
-	# 	return (batch - self.__video_mean) / (self.__video_std + 1e-6)
+	def standardize_batch(self, batch: np.ndarray) -> np.ndarray:
+		return (batch - self.__video_mean) / (self.__video_std + 1e-6)
