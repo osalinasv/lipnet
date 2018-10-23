@@ -2,8 +2,6 @@
 
 > A Keras implementation of LipNet
 
-Developed by Omar Adrian Salinas Villanueva as a bachelor's thesis @ UACJ IIT, Sistemas Computacionales.
-
 This is an implementation of the spatiotemporal convolutional neural network described by Assael et al. in [this article](https://arxiv.org/abs/1611.01599). However, this implementation only tests the unseen speakers task, the overlapped speakers task is yet to be implemented.
 
 The best training completed yet was started the 26th of September, 2018:
@@ -184,7 +182,7 @@ Related to the standardization:
 
 ## Author
 
-* **Omar Salinas** - [omarsalinas16](https://github.com/omarsalinas16)
+* **Omar Salinas** - [omarsalinas16](https://github.com/omarsalinas16) Developed as a bachelor's thesis @ UACJ - IIT
 
 See also the list of [contributors](https://github.com/omarsalinas16/lipnext/contributors) who participated in this project.
 
