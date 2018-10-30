@@ -8,17 +8,17 @@ from keras.utils import Sequence
 
 from common.files import make_dir_if_not_exists
 from core.decoding.decoder import Decoder
-from core.model.lipnext import LipNext
+from core.model.lipnet import LipNet
 from core.utils.wer import wer_sentence
 
 
 class ErrorRates(Callback):
 
-	def __init__(self, output_path: str, lipnext: LipNext, val_generator: Sequence, decoder: Decoder, samples: int = 256):
+	def __init__(self, output_path: str, lipnet: LipNet, val_generator: Sequence, decoder: Decoder, samples: int = 256):
 		super().__init__()
 
 		self.output_path = output_path
-		self.lipnext     = lipnext
+		self.lipnet     = lipnet
 		self.generator   = val_generator.__getitem__
 		self.decoder     = decoder
 		self.samples     = samples
@@ -38,7 +38,7 @@ class ErrorRates(Callback):
 			if samples_to_take <= 0:
 				break
 
-			y_pred       = self.lipnext.predict(batch_input[0:samples_to_take])
+			y_pred       = self.lipnet.predict(batch_input[0:samples_to_take])
 			input_length = batch['input_length'][0:samples_to_take]
 
 			decoded = self.decoder.decode(y_pred, input_length)

@@ -158,7 +158,7 @@ venv.bak/
 
 \.idea/
 
-# LipNext ignores
+# lipnet ignores
 
 .vscode
 

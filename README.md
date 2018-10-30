@@ -1,4 +1,4 @@
-# lipnext
+# lipnet
 
 > A Keras implementation of LipNet
 
@@ -140,7 +140,7 @@ optional arguments:
 i.e:
 
 ```
-python predict.py -w data/res/2018-09-26-02-30/lipnext_065_1.96.hdf5 -v data/dataset_eval
+python predict.py -w data/res/2018-09-26-02-30/lipnet_065_1.96.hdf5 -v data/dataset_eval
 ```
 
 ### Configuration
@@ -184,7 +184,7 @@ Related to the standardization:
 
 * **Omar Salinas** - [omarsalinas16](https://github.com/omarsalinas16) Developed as a bachelor's thesis @ UACJ - IIT
 
-See also the list of [contributors](https://github.com/omarsalinas16/lipnext/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/omarsalinas16/lipnet/contributors) who participated in this project.
 
 ## License
 

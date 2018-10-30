@@ -12,7 +12,7 @@ ADAM_S_MOMENTUM = 0.999
 ADAM_STABILITY  = 1e-08
 
 
-class LipNext(object):
+class LipNet(object):
 
 	def __init__(self, frame_count: int, image_channels: int, image_height: int, image_width: int, max_string: int, output_size: int = env.OUTPUT_SIZE):
 		input_shape = self.get_input_shape(frame_count, image_channels, image_height, image_width)

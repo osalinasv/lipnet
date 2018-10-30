@@ -12,7 +12,7 @@ from common.decode import create_decoder
 from common.files import is_dir, make_dir_if_not_exists
 from core.callbacks.error_rates import ErrorRates
 from core.generators.dataset_generator import DatasetGenerator
-from core.model.lipnext import LipNext
+from core.model.lipnet import LipNet
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -47,11 +47,13 @@ def main():
 	"""
 
 	print(r'''
-   __         __     ______   __   __     ______     __  __     ______  
-  /\ \       /\ \   /\  == \ /\ "-.\ \   /\  ___\   /\_\_\_\   /\__  _\ 
-  \ \ \____  \ \ \  \ \  _-/ \ \ \-.  \  \ \  __\   \/_/\_\/_  \/_/\ \/ 
-   \ \_____\  \ \_\  \ \_\    \ \_\\"\_\  \ \_____\   /\_\/\_\    \ \_\ 
-    \/_____/   \/_/   \/_/     \/_/ \/_/   \/_____/   \/_/\/_/     \/_/ 
+   __         __     ______   __   __     ______     ______  
+  /\ \       /\ \   /\  == \ /\ "-.\ \   /\  ___\   /\__  _\ 
+  \ \ \____  \ \ \  \ \  _-/ \ \ \-.  \  \ \  __\   \/_/\ \/ 
+   \ \_____\  \ \_\  \ \_\    \ \_\\"\_\  \ \_____\    \ \_\ 
+    \/_____/   \/_/   \/_/     \/_/ \/_/   \/_____/     \/_/ 
+
+  implemented by Omar Salinas
 	''')
 
 	ap = argparse.ArgumentParser()
@@ -95,17 +97,17 @@ def train(run_name: str, config: TrainingConfig):
 	make_dir_if_not_exists(OUTPUT_DIR)
 	make_dir_if_not_exists(LOG_DIR)
 
-	lipnext = LipNext(config.frame_count, config.image_channels, config.image_height, config.image_width, config.max_string).compile_model()
+	lipnet = LipNet(config.frame_count, config.image_channels, config.image_height, config.image_width, config.max_string).compile_model()
 
 	datagen = DatasetGenerator(config.dataset_path, config.aligns_path, config.batch_size, config.max_string, config.val_split, config.use_cache)
 
-	callbacks = create_callbacks(run_name, lipnext, datagen)
+	callbacks = create_callbacks(run_name, lipnet, datagen)
 
 	print('\nStarting training...\n')
 
 	start_time = time.time()
 
-	lipnext.model.fit_generator(
+	lipnet.model.fit_generator(
 		generator      =datagen.train_generator,
 		validation_data=datagen.val_generator,
 		epochs         =config.epochs,
@@ -121,7 +123,7 @@ def train(run_name: str, config: TrainingConfig):
 	print('\nTraining completed in: {}'.format(datetime.timedelta(seconds=elapsed_time)))
 
 
-def create_callbacks(run_name: str, lipnext: LipNext, datagen: DatasetGenerator) -> list:
+def create_callbacks(run_name: str, lipnet: LipNet, datagen: DatasetGenerator) -> list:
 	run_log_dir = os.path.join(LOG_DIR, run_name)
 	make_dir_if_not_exists(run_log_dir)
 
@@ -136,14 +138,14 @@ def create_callbacks(run_name: str, lipnext: LipNext, datagen: DatasetGenerator)
 	checkpoint_dir = os.path.join(OUTPUT_DIR, run_name)
 	make_dir_if_not_exists(checkpoint_dir)
 
-	checkpoint_template = os.path.join(checkpoint_dir, "lipnext_{epoch:03d}_{val_loss:.2f}.hdf5")
+	checkpoint_template = os.path.join(checkpoint_dir, "lipnet_{epoch:03d}_{val_loss:.2f}.hdf5")
 	checkpoint = ModelCheckpoint(checkpoint_template, monitor='val_loss', save_weights_only=True, mode='auto', period=1, verbose=1)
 
 	# WER/CER Error rate calculator
 	error_rate_log = os.path.join(run_log_dir, 'error_rates.csv')
 
 	decoder = create_decoder(DICTIONARY_PATH, False)
-	error_rates = ErrorRates(error_rate_log, lipnext, datagen.val_generator, decoder)
+	error_rates = ErrorRates(error_rate_log, lipnet, datagen.val_generator, decoder)
 
 	return [checkpoint, csv_logger, error_rates, tensorboard]
 

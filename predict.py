@@ -13,7 +13,7 @@ from common.decode import create_decoder
 from common.files import get_file_extension, get_files_in_dir, is_dir, is_file
 from common.iters import chunks
 from core.helpers.video import get_video_data_from_file, reshape_and_normalize_video_data
-from core.model.lipnext import LipNext
+from core.model.lipnet import LipNet
 from core.utils.visualization import visualize_video_subtitle
 from preprocessing.extract_roi import extract_video_data
 
@@ -40,15 +40,17 @@ class PredictConfig(NamedTuple):
 def main():
 	"""
 	Entry point of the script for using a trained model for predicting videos.
-	i.e: python predict.py -w data/res/2018-09-26-02-30/lipnext_065_1.96.hdf5 -v data/dataset_eval
+	i.e: python predict.py -w data/res/2018-09-26-02-30/lipnet_065_1.96.hdf5 -v data/dataset_eval
 	"""
 
 	print(r'''
-   __         __     ______   __   __     ______     __  __     ______  
-  /\ \       /\ \   /\  == \ /\ "-.\ \   /\  ___\   /\_\_\_\   /\__  _\ 
-  \ \ \____  \ \ \  \ \  _-/ \ \ \-.  \  \ \  __\   \/_/\_\/_  \/_/\ \/ 
-   \ \_____\  \ \_\  \ \_\    \ \_\\"\_\  \ \_____\   /\_\/\_\    \ \_\ 
-    \/_____/   \/_/   \/_/     \/_/ \/_/   \/_____/   \/_/\/_/     \/_/ 
+   __         __     ______   __   __     ______     ______  
+  /\ \       /\ \   /\  == \ /\ "-.\ \   /\  ___\   /\__  _\ 
+  \ \ \____  \ \ \  \ \  _-/ \ \ \-.  \  \ \  __\   \/_/\ \/ 
+   \ \_____\  \ \_\  \ \_\    \ \_\\"\_\  \ \_____\    \ \_\ 
+    \/_____/   \/_/   \/_/     \/_/ \/_/   \/_____/     \/_/ 
+
+  implemented by Omar Salinas
 	''')
 
 	ap = argparse.ArgumentParser()
@@ -89,7 +91,7 @@ def predict(config: PredictConfig):
 
 	print('\nMaking predictions...\n')
 
-	lipnext = LipNext(config.frame_count, config.image_channels, config.image_height, config.image_width, config.max_string).compile_model().load_weights(config.weights)
+	lipnet = LipNet(config.frame_count, config.image_channels, config.image_height, config.image_width, config.max_string).compile_model().load_weights(config.weights)
 
 	valid_paths   = []
 	input_lengths = []
@@ -98,7 +100,7 @@ def predict(config: PredictConfig):
 	elapsed_videos = 0
 	video_paths = get_list_of_videos(config.video_path)
 
-	for paths, lengths, y_pred in predict_batches(lipnext, video_paths, config.predictor_path):
+	for paths, lengths, y_pred in predict_batches(lipnet, video_paths, config.predictor_path):
 		valid_paths   += paths
 		input_lengths += lengths
 
@@ -161,7 +163,7 @@ def get_entire_video_data(path: str) -> np.ndarray:
 		return get_video_data_from_file(path)
 
 
-def predict_batches(lipnext: LipNext, video_paths: [str], predictor_path: str):
+def predict_batches(lipnet: LipNet, video_paths: [str], predictor_path: str):
 	batch_size = env.BATCH_SIZE
 
 	detector  = dlib.get_frontal_face_detector()
@@ -178,7 +180,7 @@ def predict_batches(lipnext: LipNext, video_paths: [str], predictor_path: str):
 		x_data  = np.array([x[1] for x in input_data])
 		lengths = [len(x) for x in x_data]
 
-		y_pred = lipnext.predict(x_data)
+		y_pred = lipnet.predict(x_data)
 
 		yield (valid_paths, lengths, y_pred)
 
